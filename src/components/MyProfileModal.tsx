@@ -308,20 +308,28 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                   <span>信标广播范围 (Beacon Broadcast Range)</span>
                 </div>
                 <p className="text-[10px] text-slate-400">
-                  设定罗德岛个人信标对外广播的有效半径。在此距离内的其他博士雷达方可探查到您的讯号。
+                  {broadcastVisibility === 'all'
+                    ? '当前设为「所有人可见」:任何在线博士雷达都能看到您的讯号(全域)。'
+                    : '设定罗德岛个人信标对外广播的有效半径。在此距离内的其他博士雷达方可探查到您的讯号。'}
                 </p>
               </div>
               <div className="flex items-center gap-1.5 bg-[#0a0f16] px-2 py-1 rounded border border-[#00e5ff]/40">
-                <input
-                  type="number"
-                  min={0.5}
-                  max={100}
-                  step={0.5}
-                  value={beaconBroadcastRadiusKm}
-                  onChange={(e) => setBeaconBroadcastRadiusKm(Math.max(0.5, Math.min(100, Number(e.target.value) || 0.5)))}
-                  className="w-14 bg-transparent text-[#00e5ff] font-bold text-xs text-right outline-none"
-                />
-                <span className="text-[11px] text-slate-400 font-bold">km</span>
+                {broadcastVisibility === 'all' ? (
+                  <span className="text-[#00e5ff] font-bold text-xs">全域</span>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      min={0.5}
+                      max={100}
+                      step={0.5}
+                      value={beaconBroadcastRadiusKm}
+                      onChange={(e) => setBeaconBroadcastRadiusKm(Math.max(0.5, Math.min(100, Number(e.target.value) || 0.5)))}
+                      className="w-14 bg-transparent text-[#00e5ff] font-bold text-xs text-right outline-none"
+                    />
+                    <span className="text-[11px] text-slate-400 font-bold">km</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -334,7 +342,7 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                 step={0.5}
                 value={beaconBroadcastRadiusKm}
                 onChange={(e) => setBeaconBroadcastRadiusKm(Number(e.target.value))}
-                className="w-full accent-[#00e5ff] cursor-pointer"
+                className={`w-full accent-[#00e5ff] cursor-pointer ${broadcastVisibility === 'all' ? 'opacity-40 pointer-events-none' : ''}`}
               />
               <div className="flex justify-between text-[9px] text-slate-500 font-mono">
                 <span>0.5 km (近距同好)</span>
