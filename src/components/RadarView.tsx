@@ -435,7 +435,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
               title="设定本人信标对外可被侦测范围"
             >
               <Radar size={14} className="text-[#ffde00]" />
-              <span>信标广播: {broadcastRadiusKm}km</span>
+              <span>信标广播: {myProfile.broadcastVisibility === 'all' ? '全域' : `${broadcastRadiusKm}km`}</span>
               <ChevronDown size={12} className={`transition-transform duration-200 ${showBroadcastPanel ? 'rotate-180' : ''}`} />
             </button>
 
@@ -460,24 +460,31 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
                 {/* Input & Slider */}
                 <div className="bg-[#111925] p-2.5 rounded border border-slate-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400 text-[11px]">有效广播半径:</span>
-                    <div className="flex items-center gap-1 bg-[#0a0f16] px-2 py-0.5 rounded border border-[#ffde00]/40">
-                      <input
-                        type="number"
-                        min={0.5}
-                        max={100}
-                        step={0.5}
-                        value={broadcastRadiusKm}
-                        onChange={(e) => {
-                          const val = Math.max(0.1, Math.min(100, Number(e.target.value) || 0.1));
-                          onSetBeaconBroadcastRadius(val);
-                        }}
-                        className="w-12 bg-transparent text-[#ffde00] font-bold text-xs text-right outline-none"
-                      />
-                      <span className="text-[11px] text-slate-400 font-bold">km</span>
+                  {myProfile.broadcastVisibility === 'all' ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">有效广播半径:</span>
+                      <span className="text-[11px] text-[#ffde00] font-bold">全域</span>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">有效广播半径:</span>
+                      <div className="flex items-center gap-1 bg-[#0a0f16] px-2 py-0.5 rounded border border-[#ffde00]/40">
+                        <input
+                          type="number"
+                          min={0.5}
+                          max={100}
+                          step={0.5}
+                          value={broadcastRadiusKm}
+                          onChange={(e) => {
+                            const val = Math.max(0.1, Math.min(100, Number(e.target.value) || 0.1));
+                            onSetBeaconBroadcastRadius(val);
+                          }}
+                          className="w-12 bg-transparent text-[#ffde00] font-bold text-xs text-right outline-none"
+                        />
+                        <span className="text-[11px] text-slate-400 font-bold">km</span>
+                      </div>
+                    </div>
+                  )}
 
                   <input
                     type="range"
@@ -488,7 +495,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
                     onChange={(e) => {
                       onSetBeaconBroadcastRadius(Number(e.target.value));
                     }}
-                    className="w-full accent-[#ffde00] cursor-pointer"
+                    className={`w-full accent-[#ffde00] cursor-pointer ${myProfile.broadcastVisibility === 'all' ? 'opacity-40 pointer-events-none' : ''}`}
                   />
 
                   <div className="flex justify-between text-[9px] text-slate-500 font-mono">
