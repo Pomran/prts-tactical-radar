@@ -395,7 +395,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
               <div className="text-[10px] text-slate-400">PRTS SONAR RADAR</div>
               <div className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span>探测半径:</span>
-                <span className="text-[#00e5ff]">{filter.radiusKm} KM</span>
+                <span className="text-[#00e5ff]">{myProfile.broadcastVisibility === 'all' ? '全域' : `${filter.radiusKm} KM`}</span>
                 <span className="text-slate-600">|</span>
                 <span>目标:</span>
                 <span className="text-[#ffde00] font-bold">{nearbyDoctors.length} 博士</span>
