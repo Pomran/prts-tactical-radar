@@ -602,6 +602,13 @@ export const RadarView: React.FC<RadarViewProps> = ({
                   }`}>
                     {myProfile.isCamouflaged ? 'CAMO ACTIVE (迷彩激活)' : 'EXPOSED (信号裸露)'}
                   </span>
+                  <button
+                    onClick={() => setShowOffsetPanel(false)}
+                    className="text-slate-400 hover:text-white"
+                    title="关闭"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <p className="text-[10px] text-slate-400 mb-2.5 leading-relaxed">
