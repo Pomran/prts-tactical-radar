@@ -45,6 +45,17 @@ Examples of prohibited commercial use:
 
 This project is a fan-made application based on the game *Arknights* (明日方舟). All Arknights-related trademarks, characters, artwork, and other intellectual property belong to **Hypergraph / Yostar**. This project is not affiliated with or endorsed by the official Arknights team.
 
+## Third-Party Assets & IP (重要声明)
+
+本许可证**仅适用于本项目的原创代码**。仓库中包含的以下内容**不属于**本许可证的授权范围,其权利归各自权利人所有:
+
+1. **明日方舟相关素材**(干员立绘、Q版图片、角色名、剧情文本、UI 风格等):版权归 Hypergraph / Yostar 所有,仅供本项目非商业展示之用。**禁止**在衍生作品中脱离明日方舟的非商业同人使用场景再分发。
+2. **高德地图(AMap)**:地图瓦片、JS API、WebService 接口的使用需遵守高德开放平台条款,并需使用你自己的 API Key。
+3. **Leaflet / OpenStreetMap / 其他开源依赖**:各依赖自身的开源许可证约束。
+4. **游戏音效/素材**:来自《明日方舟》或网络的素材,其权利归原作者。
+
+**再次强调**:本项目是非商业同人项目。任何商业使用——包括但不限于出售、内置广告、付费服务——均被禁止,且本许可证不授予你使用任何第三方素材进行商业活动的权利。第三方素材的使用请自行确认相应权利人的许可。
+
 ## Warranty Disclaimer
 
 This software is provided "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

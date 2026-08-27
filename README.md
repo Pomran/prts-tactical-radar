@@ -64,8 +64,8 @@ Fork → 建分支 → 改代码 → 提 PR → CI 自动检查 → 审阅 → �
 
 ### Prerequisites
 
-- Node.js 18+ (LTS recommended)
-- npm or yarn
+- Node.js 18+ (LTS recommended, **Node 22 推荐**, CI/CD 使用 22)
+- npm (项目统一使用 npm,不要用 bun 安装依赖)
 - Cloudflare account (free tier works) for deployment
 
 ### Installation

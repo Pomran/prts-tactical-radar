@@ -514,6 +514,34 @@ async function handleOffline(request: Request, env: Env): Promise<Response> {
 }
 
 // ---------------------------------------------------------------------------
+// Simple per-isolate rate limiter (best-effort abuse prevention)
+// Uses in-memory Map — resets per isolate, no KV writes. Blocks excessive
+// requests from the same IP within a short window.
+// ---------------------------------------------------------------------------
+interface RateEntry { count: number; resetAt: number; }
+const rateBuckets = new Map<string, RateEntry>();
+
+function rateLimit(key: string, limit: number, windowSec: number): boolean {
+  const now = Date.now();
+  const entry = rateBuckets.get(key);
+  if (!entry || now >= entry.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + windowSec * 1000 });
+    return true;
+  }
+  entry.count += 1;
+  if (entry.count > limit) {
+    rateBuckets.set(key, { count: entry.count, resetAt: entry.resetAt });
+    return false;
+  }
+  return true;
+}
+
+function clientKey(request: Request): string {
+  const cf = (request as any).cf;
+  return cf?.connectingIP || request.headers.get('CF-Connecting-IP') || 'unknown';
+}
+
+// ---------------------------------------------------------------------------
 // Main fetch handler
 // ---------------------------------------------------------------------------
 export default {
@@ -533,6 +561,15 @@ export default {
 
     // API routes
     if (url.pathname.startsWith('/api/')) {
+      // Rate limit write endpoints (ping/interact/offline) per IP:
+      // 10 requests / 10s window — blocks naive flood abuse, generous for real users
+      const isWriteEndpoint =
+        (url.pathname === '/api/radar/ping' && request.method === 'POST') ||
+        (url.pathname === '/api/radar/interact' && request.method === 'POST') ||
+        (url.pathname === '/api/radar/offline' && request.method === 'POST');
+      if (isWriteEndpoint && !rateLimit(`w:${clientKey(request)}`, 10, 10)) {
+        return json({ error: 'Too many requests, slow down' }, 429);
+      }
       try {
         if (url.pathname === '/api/radar/ping' && request.method === 'POST') {
           return await handlePing(request, env);
