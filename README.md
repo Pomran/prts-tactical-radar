@@ -4,8 +4,30 @@ A real-time tactical radar web application themed around Arknights (明日方舟
 
 ![License: Non-Commercial](https://img.shields.io/badge/license-Non--Commercial-blue)
 ![Tech Stack](https://img.shields.io/badge/stack-React%20%2B%20Cloudflare%20Workers-brightgreen)
+![CI](https://github.com/Pomran/prts-tactical-radar/actions/workflows/ci.yml/badge.svg)
+![Contributors](https://img.shields.io/github/contributors/Pomran/prts-tactical-radar)
+![GitHub Discussions](https://img.shields.io/github/discussions/Pomran/prts-tactical-radar)
 
 > **在线预览:** https://ark.i-test.top/
+
+## 社区与贡献 🛠️
+
+**PRTS 战术雷达是一个开放的社区项目!** 无论你是开发者、设计师还是博士玩家,都欢迎加入:
+
+| 入口 | 说明 |
+|------|------|
+| 🐛 [报告 Bug](https://github.com/Pomran/prts-tactical-radar/issues/new/choose) | 遇到问题?告诉我们 |
+| 💡 [提需求](https://github.com/Pomran/prts-tactical-radar/issues/new/choose) | 有功能想法?大胆提 |
+| 🤝 [参与开发](CONTRIBUTING.md) | Fork → PR → 合并 → 自动部署 |
+| 💬 [Discussions](https://github.com/Pomran/prts-tactical-radar/discussions) | 社区讨论、反馈、玩法交流 |
+
+**贡献流程(Fork + PR):**
+
+```
+Fork → 建分支 → 改代码 → 提 PR → CI 自动检查 → 审阅 → 合并 → 自动部署上线
+```
+
+> ⚠️ **非商业项目**:本项目仅供学习与娱乐,所有贡献需遵循[非商业许可](LICENSE)。明日方舟相关素材版权归 Hypergraph / Yostar 所有。
 
 ## Features
 
