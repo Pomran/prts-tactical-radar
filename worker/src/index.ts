@@ -50,6 +50,8 @@ interface Presence {
   isCamouflaged: boolean;
   offsetRadiusMeters: number;
   beaconBroadcastRadiusKm: number;
+  /** 'all' = visible to everyone (default); 'radius' = only within broadcast radius */
+  broadcastVisibility: 'all' | 'radius';
   lastActive: number;
   receivedSanityCount: number;
   isOnline: boolean;
@@ -255,6 +257,7 @@ async function handlePing(request: Request, env: Env): Promise<Response> {
     isCamouflaged: camo,
     offsetRadiusMeters: num(body.offsetRadiusMeters, 10, 5000, 300),
     beaconBroadcastRadiusKm: num(body.beaconBroadcastRadiusKm, 0.1, 100, 5),
+    broadcastVisibility: body.broadcastVisibility === 'radius' ? 'radius' : 'all',
     lastActive: Date.now(),
     receivedSanityCount: num(body.receivedSanityCount, 0, 99999, 0),
     isOnline: true,
@@ -266,10 +269,10 @@ async function handlePing(request: Request, env: Env): Promise<Response> {
   await putBucket(env.RADAR_KV, hash, updated);
 
   // Coarse bucket (precision 4) is only consulted when scanning with
-  // radiusKm > 8. Only maintain it for doctors whose broadcast radius is
-  // large enough to be found by those scans — halves steady-state writes
-  // and conserves the free-tier KV write quota (1000 writes/day).
-  if ((doc.beaconBroadcastRadiusKm || 5) > 8) {
+  // radiusKm > 8. Maintain it for doctors whose broadcast radius is large
+  // enough to be found by those scans, OR who broadcast to everyone —
+  // halves steady-state writes and conserves the free-tier KV write quota.
+  if (doc.broadcastVisibility === 'all' || (doc.beaconBroadcastRadiusKm || 5) > 8) {
     const coarseHash = geohashEncode(lat, lng, 4);
     const coarseBucket = await getBucket(env.RADAR_KV, `c:${coarseHash}`);
     const coarseUpdated = [...coarseBucket.filter((d) => d.id !== id), doc];
@@ -333,7 +336,9 @@ async function handleScan(request: Request, env: Env): Promise<Response> {
 
       const dist = haversineMeters(lat, lng, doc.lat, doc.lng);
       if (dist > radiusKm * 1000) continue;
-      if (dist > doc.beaconBroadcastRadiusKm * 1000) continue;
+      // 'all' visibility → visible to everyone within the scan radius.
+      // 'radius' visibility → additionally limited by the doctor's own broadcast radius.
+      if (doc.broadcastVisibility !== 'all' && dist > (doc.beaconBroadcastRadiusKm || 5) * 1000) continue;
 
       results.push({ ...doc, distance: dist });
     }

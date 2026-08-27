@@ -48,6 +48,7 @@ export function saveProfileSettings(p: DoctorProfile): void {
       isCamouflaged: p.isCamouflaged,
       offsetRadiusMeters: p.offsetRadiusMeters,
       beaconBroadcastRadiusKm: p.beaconBroadcastRadiusKm,
+      broadcastVisibility: p.broadcastVisibility || 'all',
     };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
   } catch { /* ignore */ }
@@ -142,6 +143,7 @@ function buildPresencePayload(p: DoctorProfile) {
     isCamouflaged: p.isCamouflaged,
     offsetRadiusMeters: p.offsetRadiusMeters,
     beaconBroadcastRadiusKm: p.beaconBroadcastRadiusKm,
+    broadcastVisibility: p.broadcastVisibility || 'all',
     receivedSanityCount: p.receivedSanityCount,
   };
 }
@@ -181,6 +183,7 @@ function presenceSignature(p: DoctorProfile): string {
     p.isCamouflaged ? '1' : '0',
     Math.round(p.offsetRadiusMeters || 0),
     Math.round((p.beaconBroadcastRadiusKm || 0) * 10),
+    p.broadcastVisibility || 'all',
     p.assistant?.id || p.assistant?.name || '',
     p.name,
     p.uid,
@@ -254,6 +257,7 @@ export const radarApi = {
         isCamouflaged: d.isCamouflaged ?? false,
         offsetRadiusMeters: d.offsetRadiusMeters ?? 300,
         beaconBroadcastRadiusKm: d.beaconBroadcastRadiusKm ?? 5,
+        broadcastVisibility: d.broadcastVisibility ?? 'all',
         lastActive,
         receivedSanityCount: d.receivedSanityCount ?? 0,
         isOnline: d.isOnline ?? true,

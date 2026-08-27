@@ -74,6 +74,7 @@ export interface DoctorProfile {
   isCamouflaged: boolean;
   offsetRadiusMeters?: number; // Tactical location offset radius in meters (10m ~ 3000m)
   beaconBroadcastRadiusKm?: number; // Tactical beacon broadcast range / visibility radius in KM (e.g. 0.5km ~ 50km)
+  broadcastVisibility?: 'all' | 'radius'; // all = 所有人可见(默认); radius = 仅限广播半径内可见
   lastActive: string;
   receivedSanityCount: number;
   isOnline: boolean;

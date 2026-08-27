@@ -215,6 +215,7 @@ export default function App() {
       isCamouflaged: true,
       offsetRadiusMeters: 300,
       beaconBroadcastRadiusKm: 5,
+      broadcastVisibility: 'all',
       lastActive: '刚刚',
       receivedSanityCount: 18,
       isOnline: true,
@@ -269,6 +270,7 @@ export default function App() {
   useEffect(() => {
     saveProfileSettings(myProfile);
   }, [myProfile.isCamouflaged, myProfile.offsetRadiusMeters, myProfile.beaconBroadcastRadiusKm,
+     myProfile.broadcastVisibility,
      myProfile.name, myProfile.title, myProfile.level, myProfile.uid, myProfile.server,
      myProfile.assistant, myProfile.sanity, myProfile.motto, myProfile.supportOperators,
      myProfile.wantedClues, myProfile.extraClues]);
@@ -541,6 +543,11 @@ export default function App() {
     prtsAudio.playClick();
   };
 
+  const handleSetBroadcastVisibility = (vis: 'all' | 'radius') => {
+    setMyProfile((prev) => ({ ...prev, broadcastVisibility: vis }));
+    prtsAudio.playClick();
+  };
+
   // -----------------------------------------------------------------------
   // Interactions — local log + fire-and-forget API call
   // -----------------------------------------------------------------------
@@ -690,6 +697,7 @@ export default function App() {
             onRegenerateOffset={handleRegenerateOffset}
             onSetOffsetRadius={handleSetOffsetRadius}
             onSetBeaconBroadcastRadius={handleSetBeaconBroadcastRadius}
+            onSetBroadcastVisibility={handleSetBroadcastVisibility}
           />
         )}
         {activeTab === 'list' && (

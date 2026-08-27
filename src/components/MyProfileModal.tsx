@@ -38,6 +38,7 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
   const [isCamouflaged, setIsCamouflaged] = useState(profile.isCamouflaged);
   const [offsetRadiusMeters, setOffsetRadiusMeters] = useState(profile.offsetRadiusMeters || 300);
   const [beaconBroadcastRadiusKm, setBeaconBroadcastRadiusKm] = useState(profile.beaconBroadcastRadiusKm || 5);
+  const [broadcastVisibility, setBroadcastVisibility] = useState<'all' | 'radius'>(profile.broadcastVisibility || 'all');
   
   // Operator filter & search state
   const [operatorSearch, setOperatorSearch] = useState('');
@@ -73,6 +74,7 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
       isCamouflaged,
       offsetRadiusMeters,
       beaconBroadcastRadiusKm,
+      broadcastVisibility,
     };
     onSave(updated);
   };
@@ -339,6 +341,47 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                 <span>10 km (同城同好)</span>
                 <span>100 km (战区广域)</span>
               </div>
+            </div>
+
+            {/* Broadcast Visibility Toggle — 信标可见范围 */}
+            <div className="bg-[#0a0f16] rounded border border-slate-800 p-2.5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-300 text-[11px] font-bold">信标可见范围:</span>
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                  broadcastVisibility === 'all'
+                    ? 'bg-[#ffde00]/20 text-[#ffde00] border-[#ffde00]/50'
+                    : 'bg-slate-800/60 text-slate-300 border-slate-600'
+                }`}>
+                  {broadcastVisibility === 'all' ? '全体在线博士可见' : '仅限广播半径内'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { prtsAudio.playClick(); setBroadcastVisibility('all'); }}
+                  className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                    broadcastVisibility === 'all'
+                      ? 'bg-[#ffde00]/25 text-[#ffde00] border-[#ffde00]'
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  所有人可见 (默认)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { prtsAudio.playClick(); setBroadcastVisibility('radius'); }}
+                  className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                    broadcastVisibility === 'radius'
+                      ? 'bg-[#00e5ff]/25 text-[#00e5ff] border-[#00e5ff]'
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  仅广播半径内
+                </button>
+              </div>
+              <p className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                所有人可见:任何在线博士雷达都能看到你(默认)。仅广播半径内:只有在你广播半径内的博士能看到你。
+              </p>
             </div>
           </div>
 

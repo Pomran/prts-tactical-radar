@@ -44,6 +44,7 @@ interface RadarViewProps {
   onRegenerateOffset: () => void;
   onSetOffsetRadius: (radiusMeters: number) => void;
   onSetBeaconBroadcastRadius: (radiusKm: number) => void;
+  onSetBroadcastVisibility: (vis: 'all' | 'radius') => void;
 }
 
 export const RadarView: React.FC<RadarViewProps> = ({
@@ -61,6 +62,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
   onRegenerateOffset,
   onSetOffsetRadius,
   onSetBeaconBroadcastRadius,
+  onSetBroadcastVisibility,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -439,7 +441,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
             {/* Beacon Broadcast Popover */}
             {showBroadcastPanel && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-[#0c121c]/95 border border-[#ffde00]/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+              <div className="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-[#ffde00]/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
                   <span className="font-bold text-white flex items-center gap-1.5">
                     <Radar size={13} className="text-[#ffde00]" /> 信标广播范围
@@ -495,6 +497,53 @@ export const RadarView: React.FC<RadarViewProps> = ({
                     <span>100 km (战区)</span>
                   </div>
                 </div>
+
+                {/* Broadcast Visibility Toggle — 信标可见范围 */}
+                <div className="bg-[#111925] p-2.5 rounded border border-slate-800 mt-2">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-slate-300 text-[11px] font-bold">信标可见范围:</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+                      myProfile.broadcastVisibility === 'all'
+                        ? 'bg-[#ffde00]/20 text-[#ffde00] border-[#ffde00]/50'
+                        : 'bg-slate-800/60 text-slate-300 border-slate-600'
+                    }`}>
+                      {myProfile.broadcastVisibility === 'all' ? '全体在线博士可见' : '仅限广播半径内'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => {
+                        prtsAudio.playClick();
+                        onSetBroadcastVisibility('all');
+                        showToast('信标已设为全体在线博士可见');
+                      }}
+                      className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                        myProfile.broadcastVisibility === 'all'
+                          ? 'bg-[#ffde00]/25 text-[#ffde00] border-[#ffde00]'
+                          : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                      }`}
+                    >
+                      所有人可见 (默认)
+                    </button>
+                    <button
+                      onClick={() => {
+                        prtsAudio.playClick();
+                        onSetBroadcastVisibility('radius');
+                        showToast(`信标已限为 ${broadcastRadiusKm}km 内可见`);
+                      }}
+                      className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                        myProfile.broadcastVisibility === 'radius'
+                          ? 'bg-[#00e5ff]/25 text-[#00e5ff] border-[#00e5ff]'
+                          : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                      }`}
+                    >
+                      仅广播半径内
+                    </button>
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
+                    选择「所有人可见」后,任何在线博士的雷达都能看到你;选择「仅广播半径内」则只有在你广播半径内的博士能看到你。
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -543,7 +592,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
             {/* Tactical Camouflage Settings Dropdown Popover */}
             {showOffsetPanel && (
-              <div className="absolute right-0 top-full mt-2 w-72 bg-[#0c121c]/95 border border-emerald-500/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+              <div className="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-emerald-500/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
                   <span className="font-bold text-white flex items-center gap-1.5">
                     <Shield size={13} className="text-emerald-400" /> 战术迷彩防御系统
@@ -686,7 +735,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
       {/* Filter Drawer / Panel */}
       {showFilterPanel && (
-        <div className="absolute top-14 right-3 z-[410] w-80 bg-[#0e1624]/95 border border-[#00e5ff]/40 rounded-lg p-3.5 backdrop-blur-lg shadow-2xl font-mono text-xs text-slate-200 animate-in fade-in slide-in-from-top-2">
+        <div className="absolute top-14 right-3 z-[410] w-[min(20rem,calc(100vw-1.5rem))] bg-[#0e1624]/95 border border-[#00e5ff]/40 rounded-lg p-3.5 backdrop-blur-lg shadow-2xl font-mono text-xs text-slate-200 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
             <span className="font-bold text-[#00e5ff] flex items-center gap-1.5">
               <Filter size={13} /> 雷达战术参数配置
