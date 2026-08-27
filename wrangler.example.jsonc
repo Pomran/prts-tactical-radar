@@ -1,0 +1,31 @@
+// Example Cloudflare Worker configuration.
+// Copy this file to `wrangler.jsonc` and fill in your own values
+// (route, KV namespace id, etc.). The real `wrangler.jsonc` is gitignored.
+{
+  "name": "prts-tactical-radar",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2024-01-01",
+
+  // Your own zone/route. Replace `your-domain.example.com` with your real domain,
+  // or temporarily remove `routes` to deploy without a custom domain.
+  "routes": [
+    { "pattern": "your-domain.example.com/*", "zone_name": "your-zone-name" }
+  ],
+
+  // Replace `your-kv-namespace-id` with your own RADAR_KV namespace id.
+  // Create one via: npx wrangler kv namespace create RADAR_KV
+  "kv_namespaces": [
+    {
+      "binding": "RADAR_KV",
+      "id": "your-kv-namespace-id"
+    }
+  ],
+
+  "assets": {
+    "directory": "./dist"
+  },
+
+  "dev": {
+    "port": 8787
+  }
+}

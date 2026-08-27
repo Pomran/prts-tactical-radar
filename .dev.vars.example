@@ -1,0 +1,8 @@
+# Local-development secrets for the Cloudflare Worker.
+# Copy this file to `.dev.vars` and fill in your own values.
+# `.dev.vars` is gitignored — never commit real secrets.
+#
+# GAODE_KEY: your Gaode (AMap) WebService REST API key (高德开放平台 Web服务 key).
+# Used by /api/geo/reverse (reverse geocoding) and /api/radar/geoip.
+# Get one at https://console.amap.com/ -> 应用管理 -> 我的应用 -> 创建应用 -> Web服务.
+GAODE_KEY="your_gaode_web_service_key"
