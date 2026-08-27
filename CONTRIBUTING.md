@@ -1,246 +1,196 @@
 # Contributing to PRTS Tactical Radar
 
-Thank you for your interest in contributing to PRTS Tactical Radar! This document provides guidelines and information for contributors.
+感谢你对 PRTS 战术雷达感兴趣!这是一个社区项目,我们欢迎任何人参与。
 
-## Welcome
+## 项目定位
 
-We welcome contributions from the community, whether it's:
-- Bug fixes and improvements
-- New features
-- Documentation
-- Translations
-- Testing and feedback
-- Ideas and suggestions
+- **非商业开源项目**:本项目的所有贡献都必须是非商业性质的(详见 [LICENSE](LICENSE))
+- **明日方舟同人项目**:所有明日方舟相关素材版权归 Hypergraph / Yostar 所有
+- **社区驱动**:代码、文档、设计、测试、反馈,任何形式的贡献都欢迎
 
-## Non-Commercial Project
-
-**Important**: This is a **non-commercial** project licensed under the [PRTS Non-Commercial License](LICENSE). This means:
-
-1. **All contributions must be for non-commercial purposes**
-2. **Derivative works must remain non-commercial**
-3. **Commercial use is prohibited** without explicit permission
+## 参与方式
 
-Please ensure your contributions align with these principles.
-
-## Getting Started
+### 不需要写代码的方式
 
-### Prerequisites
+- 报告 Bug(见下方「报告 Bug」)
+- 提出功能建议(使用 [Feature Request 模板](.github/ISSUE_TEMPLATE/feature_request.yml))
+- 改进文档、翻译
+- 在 GitHub Discussions 讨论想法
+- 帮其他贡献者测试、复现问题
+- 分享你的使用体验和反馈
 
-- Node.js 18+ (LTS recommended)
-- npm or yarn
-- Git
-- Cloudflare account (free tier works) for testing deployments
+### 写代码的协作流程 (Fork + PR)
 
-### Setup
+本项目使用标准的 **Fork + Pull Request** 工作流。整体流程:
 
-1. Fork the repository on GitHub
-2. Clone your fork locally:
-   ```bash
-   git clone https://github.com/pomran/prts-tactical-radar.git
-   cd prts-tactical-radar
-   ```
+```
+Fork 仓库 → 建分支 → 改代码 → 提 PR → 维护者审阅 → 合并到 main
+```
 
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
+#### 1. Fork 仓库
 
-4. Set up your development environment:
-   ```bash
-   # Copy configuration templates
-   cp .dev.vars.example .dev.vars
-   cp wrangler.example.jsonc wrangler.jsonc
-   
-   # Edit .dev.vars with your Gaode API key
-   # Edit wrangler.jsonc with your Cloudflare settings
-   ```
+在 [GitHub 仓库页面](https://github.com/Pomran/prts-tactical-radar) 点击右上角 **Fork**,把项目复制到你的账号下。
 
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
+#### 2. Clone 你的 Fork
 
-## Development Workflow
+```bash
+git clone https://github.com/你的用户名/prts-tactical-radar.git
+cd prts-tactical-radar
+```
 
-### Branch Strategy
+#### 3. 添加上游仓库(同步用)
 
-- `main` - Stable release branch
-- `develop` - Main development branch
-- Feature branches: `feature/description`
-- Bug fixes: `fix/description`
-- Documentation: `docs/description`
+```bash
+git remote add upstream https://github.com/Pomran/prts-tactical-radar.git
+git fetch upstream
+```
 
-### Making Changes
+以后保持与主仓库同步:
 
-1. Create a feature branch from `develop`:
-   ```bash
-   git checkout -b feature/your-feature develop
-   ```
+```bash
+git checkout main
+git pull upstream main
+```
 
-2. Make your changes
-3. Test thoroughly (see testing guidelines below)
-4. Commit with clear, descriptive messages
-5. Push to your fork and create a pull request
+#### 4. 创建功能分支
 
-### Code Style
+```bash
+git checkout -b feature/my-feature
+```
 
-- Follow existing code patterns and conventions
-- Use TypeScript for type safety
-- Write meaningful comments (in Chinese or English)
-- Keep functions focused and small
-- Use meaningful variable and function names
+命名规范:
+- 新功能: `feature/描述`
+- Bug 修复: `fix/描述`
+- 文档: `docs/描述`
+- 重构: `refactor/描述`
 
-### Testing
+#### 5. 安装依赖并开发
 
-Before submitting a pull request:
+```bash
+npm install
+npm run dev        # 启动 Vite 开发服务器 (端口 3000)
+npm run dev:cf     # 同时启动本地 Cloudflare Worker (端口 8787)
+```
 
-1. **Lint your code**:
-   ```bash
-   npm run lint
-   ```
+本地调试 Worker 需要配置密钥:
+```bash
+cp .dev.vars.example .dev.vars   # 填入你的高德 WebService key
+cp wrangler.example.jsonc wrangler.jsonc   # 填入你的 KV namespace id 等
+```
 
-2. **Build the project**:
-   ```bash
-   npm run build
-   ```
+#### 6. 提交前检查
 
-3. **Test locally**:
-   ```bash
-   npm run dev:cf
-   ```
-   Verify all features work as expected.
+在提交前,确保以下命令全部通过:
 
-4. **Test the Worker**:
-   ```bash
-   npx wrangler dev
-   ```
-   Ensure API endpoints function correctly.
+```bash
+npm run lint       # TypeScript 类型检查
+npm run build      # 构建生产包
+```
 
-### Documentation
+#### 7. 提交并推送
 
-- Update README.md if adding new features
-- Add JSDoc comments for public APIs
-- Update any relevant documentation in the `docs/` folder
+```bash
+git add .
+git commit -m "feat: 添加 xxx 功能"   # 用清晰的信息描述你的改动
+git push origin feature/my-feature
+```
 
-## Types of Contributions
+#### 8. 创建 Pull Request
 
-### Bug Fixes
+到你的 Fork 仓库页面,会看到「Compare & pull request」按钮。点击后:
 
-- Clearly describe the bug in your issue/PR
-- Include steps to reproduce if possible
-- Test your fix thoroughly
+1. 确认 base 仓库是 `Pomran/prts-tactical-radar` 的 `main` 分支
+2. 填写 PR 描述(使用 [PR 模板](.github/PULL_REQUEST_TEMPLATE.md))
+3. 关联相关 Issue(如果有)
 
-### New Features
+**注意**:PR 里不要包含任何 API key、token、密码等敏感信息!CI 也会检查密钥格式。
 
-- Discuss major features in an issue first
-- Ensure the feature aligns with the project's non-commercial nature
-- Add appropriate documentation
+#### 9. 等待审阅
 
-### Documentation
+维护者会审阅你的 PR,可能会要求修改。修改后推送到同一个分支即可,PR 会自动更新。
 
-- Fix typos and grammar
-- Improve clarity
-- Add examples
-- Translate content (see translations section)
+## 开发规范
 
-### Translations
+### 代码风格
 
-We welcome translations! Please:
+- 使用 TypeScript,类型安全优先
+- 遵循现有代码风格(参考 `src/` 下的已有代码)
+- 组件、函数命名清晰,保持单一职责
+- 不要添加无意义的注释,代码自文档化
 
-1. Check existing translations first
-2. Maintain consistency with existing terminology
-3. Test translations in context
+### Git 提交信息规范
 
-## Arknights-Specific Contributions
+采用 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/) 风格:
 
-When contributing Arknights-related content:
+- `feat:` 新功能
+- `fix:` Bug 修复
+- `docs:` 文档
+- `refactor:` 重构
+- `style:` 样式/格式
+- `test:` 测试
+- `chore:` 杂项
 
-1. **Respect IP**: All Arknights trademarks, characters, and artwork belong to Hypergraph/Yostar
-2. **Fan content only**: This is a fan project, not official
-3. **Non-commercial**: All contributions must be non-commercial
-4. **Appropriate content**: Keep content appropriate for the Arknights community
+示例:
+```
+feat: 添加干员支援位展示
+fix: 修复定位按钮在移动端被推出屏幕的问题
+docs: 更新部署文档
+```
 
-## Pull Request Guidelines
+## CI / CD
 
-### Before Submitting
+本项目使用 GitHub Actions 自动检查:
 
-- [ ] Code follows project style guidelines
-- [ ] Changes are tested locally
-- [ ] Documentation is updated if needed
-- [ ] Commit messages are clear and descriptive
-- [ ] No sensitive information (API keys, etc.) is included
+- **CI**:每个 PR 都会自动运行 `npm run lint` + `npm run build`,通过后才能合并
+- **CD**:合并到 `main` 后自动部署到 Cloudflare Workers(仅限主仓库)
 
-### PR Description
+## 敏感信息与安全
 
-Please include:
+**禁止提交以下内容到仓库:**
 
-1. **Summary**: Brief description of changes
-2. **Motivation**: Why this change is needed
-3. **Testing**: How you tested the changes
-4. **Screenshots**: If applicable, for UI changes
-5. **Related issues**: Link to any related issues
+- 高德(AMap)WebService REST key(`GAODE_KEY`)
+- 高德 JS API key / securityJsCode
+- Cloudflare API Token
+- KV namespace id
+- 任何密码、token、cookie
 
-### Review Process
+这些信息请通过 GitHub Secrets 或 `.dev.vars`(本地,已被 gitignore)配置。
 
-1. All PRs require at least one review
-2. Maintainers may request changes
-3. Once approved, PRs will be merged into `develop`
-4. Regular releases will merge `develop` into `main`
+## 维护者指南
 
-## Reporting Issues
+> 以下是给有权限的维护者的说明。
 
-### Bug Reports
+### 合并 PR
 
-Include:
+1. 检查 CI 是否通过
+2. 确认 PR 不包含敏感信息
+3. 用 **Squash and merge** 合并,保持 main 历史整洁
+4. 合并后删除源分支(推荐)
 
-1. **Environment**: Browser, OS, Node version
-2. **Steps to reproduce**
-3. **Expected behavior**
-4. **Actual behavior**
-5. **Console errors** (if any)
-6. **Screenshots** (if applicable)
+### 分支保护
 
-### Feature Requests
+`main` 分支已开启保护:
+- 禁止直接 push,所有变更必须通过 PR
+- 至少需要 1 人审阅批准
+- CI 必须通过
 
-Include:
+### 发布
 
-1. **Use case**: Why this feature would be useful
-2. **Proposed solution**: How you envision it working
-3. **Alternatives**: Other approaches you considered
-4. **Non-commercial impact**: How it maintains non-commercial nature
+合并到 main 后会自动部署。如需要手动触发:
 
-## Community Guidelines
+```bash
+npm run build
+npx wrangler deploy
+```
 
-### Code of Conduct
+## 行为准则
 
-- Be respectful and inclusive
-- Focus on constructive feedback
-- Help newcomers learn
-- Keep discussions on-topic
-- Respect the non-commercial nature of the project
+请阅读 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。参与本项目即表示你同意遵守该行为准则。
 
-### Communication
+## 感谢
 
-- Use GitHub Issues for bug reports and feature requests
-- Use Pull Requests for code contributions
-- Be patient with response times
-- Ask questions if unsure about anything
-
-## License
-
-By contributing to PRTS Tactical Radar, you agree that your contributions will be licensed under the [PRTS Non-Commercial License](LICENSE).
-
-This means:
-
-1. Your contributions will be non-commercial
-2. Derivative works must remain non-commercial
-3. You retain copyright to your contributions
-4. You grant permission for your contributions to be used under the project license
-
-## Thank You
-
-Thank you for considering contributing to PRTS Tactical Radar! Your help is greatly appreciated in making this project better for the Arknights community.
+参与就是最好的支持!无论你是写代码、报 bug、提建议还是帮测试,都让这个社区项目变得更好。
 
 ---
 
-*Remember: This is a non-commercial fan project. All contributions should align with this principle.*
+*本项目是非商业的明日方舟同人项目,所有贡献都应在非商业前提下进行。*

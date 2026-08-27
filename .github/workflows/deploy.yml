@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    if: github.repository == 'Pomran/prts-tactical-radar'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      - name: Generate wrangler config
+        run: |
+          cat > wrangler.jsonc <<'EOF'
+          {
+            "name": "${{ vars.CF_WORKER_NAME }}",
+            "main": "worker/src/index.ts",
+            "compatibility_date": "2024-01-01",
+            "routes": [
+              { "pattern": "${{ vars.CF_ROUTE_PATTERN }}", "zone_name": "${{ vars.CF_ZONE_NAME }}" }
+            ],
+            "kv_namespaces": [
+              { "binding": "RADAR_KV", "id": "${{ secrets.CF_KV_NAMESPACE_ID }}" }
+            ],
+            "assets": { "directory": "./dist" },
+            "vars": { "GAODE_KEY": "${{ secrets.GAODE_KEY }}" }
+          }
+          EOF
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
