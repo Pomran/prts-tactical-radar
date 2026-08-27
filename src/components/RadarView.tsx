@@ -441,7 +441,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
             {/* Beacon Broadcast Popover */}
             {showBroadcastPanel && (
-              <div className="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-[#ffde00]/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+              <div className="fixed right-3 top-24 z-[420] w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-[#ffde00]/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono backdrop-blur-xl animate-in fade-in slide-in-from-top-2 max-h-[calc(100dvh-7rem)] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
                   <span className="font-bold text-white flex items-center gap-1.5">
                     <Radar size={13} className="text-[#ffde00]" /> 信标广播范围
@@ -592,7 +592,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
 
             {/* Tactical Camouflage Settings Dropdown Popover */}
             {showOffsetPanel && (
-              <div className="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-emerald-500/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono z-[420] backdrop-blur-xl animate-in fade-in slide-in-from-top-2">
+              <div className="fixed right-3 top-24 z-[420] w-[min(18rem,calc(100vw-1.5rem))] bg-[#0c121c]/95 border border-emerald-500/50 rounded-lg shadow-2xl p-3 text-xs text-slate-200 font-mono backdrop-blur-xl animate-in fade-in slide-in-from-top-2 max-h-[calc(100dvh-7rem)] overflow-y-auto">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2.5">
                   <span className="font-bold text-white flex items-center gap-1.5">
                     <Shield size={13} className="text-emerald-400" /> 战术迷彩防御系统
