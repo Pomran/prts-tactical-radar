@@ -502,6 +502,9 @@ export default function App() {
 
     setIsScanning(true);
 
+    // 在手势同步阶段解锁音频,否则异步定位回调里的音效会被浏览器静音
+    prtsAudio.unlock();
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {

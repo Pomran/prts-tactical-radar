@@ -57,7 +57,7 @@ class TacticalAudio {
   public bindUserGesture() {
     if (typeof window === 'undefined') return;
     const handler = () => {
-      this.initContext();
+      this.unlock();
       window.removeEventListener('click', handler);
       window.removeEventListener('touchstart', handler);
       window.removeEventListener('keydown', handler);
@@ -65,6 +65,29 @@ class TacticalAudio {
     window.addEventListener('click', handler, { once: true });
     window.addEventListener('touchstart', handler, { once: true });
     window.addEventListener('keydown', handler, { once: true });
+  }
+
+  /**
+   * Create/resume the AudioContext synchronously. Must be called from within
+   * a user-gesture handler (before any async work) so the browser permits
+   * audio. Without this, effects played later (e.g. inside an async
+   * geolocation callback) fire while the context is still 'suspended'.
+   */
+  public unlock() {
+    if (typeof window === 'undefined') return;
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (AudioCtx) {
+      try {
+        if (!this.ctx) {
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+      } catch {
+        // ignore — audio is best-effort
+      }
+    }
   }
 
   public setMuted(muted: boolean) {
