@@ -123,15 +123,30 @@ function startGpsWatch(
       }
     },
     (err) => {
+      // TIMEOUT (code 3): device is still trying to acquire a fix — keep
+      // watching so a later update can refine our position. Only stop on
+      // hard failures (permission denied / position unavailable).
+      if (err.code === 3) {
+        console.warn('[PRTS] GPS watch timeout, keep waiting for fix...');
+        return;
+      }
       console.warn('[PRTS] GPS watch error:', err.code, err.message);
       stop();
     },
-    { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 },
   );
+  // 兜底：若长时间未能拿到可用的高精度点，用已有点结束，避免永久挂起
+  const watchdog = setTimeout(() => {
+    if (!stopped && (lastLat === null || lastAcc > 200)) {
+      console.warn('[PRTS] GPS watch timed out without usable fix, stopping');
+      stop();
+    }
+  }, 60000);
   function stop() {
     if (stopped) return;
     stopped = true;
     navigator.geolocation.clearWatch(watchId);
+    clearTimeout(watchdog);
     onDone(lastLat, lastLng, lastAcc);
   }
   return stop;
