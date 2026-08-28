@@ -113,6 +113,10 @@ export const RadarView: React.FC<RadarViewProps> = ({
       markersGroupRef.current = markersGroup;
 
       mapInstanceRef.current = map;
+      // Ensure Leaflet re-measures after flex layout settles — otherwise the
+      // container may be 0-height at mount time and the map renders blank.
+      setTimeout(() => map.invalidateSize(), 100);
+      window.addEventListener('resize', () => map.invalidateSize());
     }
 
     return () => {
@@ -874,7 +878,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
       )}
 
       {/* Main Leaflet Map Canvas */}
-      <div ref={mapContainerRef} className="w-full h-full z-0 prts-scanlines" />
+      <div ref={mapContainerRef} className="w-full flex-1 min-h-0 z-0 prts-scanlines" />
 
       {/* Bottom Floating Quick Carousel / Nearby Doctors Quick Bar */}
       <div className="absolute bottom-3 left-3 right-3 z-[400] pointer-events-none">
