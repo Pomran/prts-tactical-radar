@@ -21,6 +21,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+
+      - name: Inject AMap JS API env for build
+        run: |
+          cat > .env.local <<'EOF'
+          VITE_AMAP_KEY="${{ secrets.VITE_AMAP_KEY }}"
+          VITE_AMAP_SECURITY_JS_CODE="${{ secrets.VITE_AMAP_SECURITY_JS_CODE }}"
+          EOF
       - run: npm run build
 
       - name: Generate wrangler config

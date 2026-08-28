@@ -11,9 +11,9 @@
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <script>
-      window._AMapSecurityConfig = { securityJsCode: 'YOUR_AMAP_SECURITY_JS_CODE' };
+      window._AMapSecurityConfig = { securityJsCode: '%VITE_AMAP_SECURITY_JS_CODE%' };
     </script>
-    <script src="https://webapi.amap.com/maps?v=2.0&key=YOUR_AMAP_JS_API_KEY&plugin=AMap.Geolocation"></script>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=%VITE_AMAP_KEY%&plugin=AMap.Geolocation"></script>
   </head>
   <body>
     <div id="root"></div>
