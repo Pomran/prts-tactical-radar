@@ -1,23 +1,20 @@
 /**
  * PRTS Tactical Radar — Cloudflare Worker API
  *
- * Minimal viable backend: KV-only presence (geohash bucketing) + interaction inbox.
- * No D1, no auth tokens. Deploy with: wrangler deploy
+ * Realtime presence is owned by the PresenceCoordinator Durable Object
+ * (Level 1 = memory + WebSockets). This Worker:
+ *   - terminates HTTP API routes (ping/scan/interact/inbox/offline) and proxies
+ *     presence traffic to the DO, keeping response shapes backward-compatible
+ *     for the Web app and the WeChat miniapp,
+ *   - terminates the WebSocket upgrade at /api/radar/ws and hands the
+ *     connection to the DO,
+ *   - serves Level 2/3 persistence via D1 (user profiles, last-seen, inbox).
+ * KV is no longer on the presence write path.
  */
+import { Env } from './env';
+import { PresenceCoordinator } from './presence';
 
-// ---------------------------------------------------------------------------
-// Env (set via wrangler.jsonc bindings / .dev.vars / Secret)
-// ---------------------------------------------------------------------------
-export interface Env {
-  RADAR_KV: KVNamespace;
-  /** Gaode (AMap) WebService REST API key. Set via Secret (production) or .dev.vars (local). */
-  GAODE_KEY?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-import { Presence, getBucket, scanNearby } from './radar/scan';
+export { PresenceCoordinator };
 
 interface WireOperator {
   opId?: string;
@@ -47,7 +44,8 @@ interface InboxItem {
 }
 
 // ---------------------------------------------------------------------------
-// Geohash (pure JS, zero deps — precision 5 ≈ 5km cells)
+// Geohash (kept for the legacy `geohash` response field — presence no longer
+// reads KV buckets, but the ping response shape is preserved for compat).
 // ---------------------------------------------------------------------------
 const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
 
@@ -73,44 +71,8 @@ function geohashEncode(lat: number, lng: number, precision: number): string {
   return hash;
 }
 
-const NEIGHBORS_OFFSETS: [number, number][] = [
-  [1, 0], [-1, 0], [0, 1], [0, -1],
-  [1, 1], [1, -1], [-1, 1], [-1, -1],
-];
-
-function geohashNeighbors(hash: string): string[] {
-  const neighbors: string[] = [];
-  const isOdd = hash.length % 2 === 1;
-
-  for (const [dy, dx] of NEIGHBORS_OFFSETS) {
-    let newHash = '';
-    let carryLat = dy;
-    let carryLng = dx;
-    for (let i = hash.length - 1; i >= 0; i--) {
-      const ch = BASE32.indexOf(hash[i]);
-      const bitIdx = isOdd ? (i % 2 === 0 ? 0 : 1) : (i % 2 === 0 ? 1 : 0);
-
-      let v = ch;
-      if (bitIdx === 0) {
-        v += carryLng;
-        carryLng = 0;
-        if (v < 0) { v += 32; carryLat += (isOdd ? -1 : -2); }
-        else if (v >= 32) { v -= 32; carryLat += (isOdd ? 1 : 2); }
-      } else {
-        v += carryLat;
-        carryLat = 0;
-        if (v < 0) { v += 32; carryLng += (isOdd ? -2 : -1); }
-        else if (v >= 32) { v -= 32; carryLng += (isOdd ? 2 : 1); }
-      }
-      newHash = BASE32[v] + newHash;
-    }
-    if (carryLat === 0 && carryLng === 0) neighbors.push(newHash);
-  }
-  return [...new Set(neighbors)];
-}
-
 // ---------------------------------------------------------------------------
-// Math helpers
+// Helpers
 // ---------------------------------------------------------------------------
 function toRad(d: number) { return (d * Math.PI) / 180; }
 
@@ -136,32 +98,13 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-const PRESENCE_TTL = 600; // seconds — 10 min
-const INBOX_TTL = 86400; // 24 hours
-const PRECISION = 5; // geohash precision (~5km cells)
-const MAX_BUCKET_DOCS = 200;
-const MAX_INBOX = 50;
+const PRECISION = 5;
 
 // ---------------------------------------------------------------------------
-// KV bucket helpers
+// Presence DO stub access
 // ---------------------------------------------------------------------------
-async function putBucket(kv: KVNamespace, hash: string, docs: Presence[]): Promise<void> {
-  const pruned = docs
-    .filter((d) => Date.now() - d.lastActive < PRESENCE_TTL * 1000)
-    .slice(-MAX_BUCKET_DOCS);
-  await kv.put(`p:${hash}`, JSON.stringify(pruned), { expirationTtl: PRESENCE_TTL });
-}
-
-async function removeFromBuckets(kv: KVNamespace, id: string, lat: number, lng: number) {
-  const center = geohashEncode(lat, lng, PRECISION);
-  const keys = [center, ...geohashNeighbors(center)];
-  for (const h of keys) {
-    const bucket = await getBucket(kv, h);
-    const filtered = bucket.filter((d) => d.id !== id);
-    if (filtered.length !== bucket.length) {
-      await kv.put(`p:${h}`, JSON.stringify(filtered), { expirationTtl: PRESENCE_TTL });
-    }
-  }
+function presenceStub(env: Env): DurableObjectStub {
+  return env.PRESENCE.get(env.PRESENCE.idFromName('global'));
 }
 
 // ---------------------------------------------------------------------------
@@ -174,75 +117,20 @@ async function handlePing(request: Request, env: Env): Promise<Response> {
   const id = str(body.id, 64);
   if (!id) return json({ error: 'Missing id' }, 400);
 
-  let lat = num(body.lat, -85, 85, 0);
-  let lng = num(body.lng, -180, 180, 0);
+  const lat = num(body.lat, -85, 85, 0);
+  const lng = num(body.lng, -180, 180, 0);
   if (!lat && !lng) return json({ error: 'Invalid coordinates' }, 400);
 
-  const camo = !!body.isCamouflaged;
-  if (camo) {
-    const r = num(body.offsetRadiusMeters, 10, 5000, 300);
-    const angle = Math.random() * 2 * Math.PI;
-    const dist = (0.5 + Math.random() * 0.5) * r;
-    lat += (dist * Math.cos(angle)) / 111000;
-    lng += (dist * Math.sin(angle)) / (111000 * Math.cos(toRad(lat)));
-  }
-
-  const sanitizeOp = (o: any): WireOperator => ({
-    opId: typeof o?.opId === 'string' ? o.opId.slice(0, 40) : undefined,
-    dataUrl: typeof o?.dataUrl === 'string' && o.dataUrl.startsWith('data:image/') ? o.dataUrl.slice(0, 150000) : undefined,
-    name: str(o?.name, 40, 'Unknown'),
-    cnName: str(o?.cnName, 40, '未知'),
-    color: typeof o?.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(o.color) ? o.color : '#00e5ff',
-    masterySkill: str(o?.masterySkill, 60),
+  // Forward to the Presence DO (it owns sanitization + memory). No KV write.
+  const res = await presenceStub(env).fetch('https://presence.local/presence', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
+  await res.arrayBuffer(); // drain
+  if (!res.ok) return json({ ok: false, error: 'presence failed' }, 502);
 
-  const doc: Presence = {
-    id,
-    name: str(body.name, 32, 'Doctor'),
-    title: str(body.title, 40, '罗德岛指挥官'),
-    level: num(body.level, 1, 180, 120),
-    uid: str(body.uid, 16, '--------'),
-    server: str(body.server, 16, 'CN_OFFICIAL'),
-    assistant: sanitizeOp(body.assistant),
-    supportOperators: Array.isArray(body.supportOperators)
-      ? body.supportOperators.slice(0, 4).map((s: any) => ({
-          operator: sanitizeOp(s?.operator),
-          level: num(s?.level, 0, 120, 90),
-          elite: num(s?.elite, 0, 3, 2),
-          skillLevel: str(s?.skillLevel, 20, '专精 3'),
-        }))
-      : [],
-    motto: str(body.motto, 200),
-    wantedClues: Array.isArray(body.wantedClues) ? body.wantedClues.slice(0, 7).map((n: any) => num(n, 1, 7, 1)) : [],
-    extraClues: Array.isArray(body.extraClues) ? body.extraClues.slice(0, 7).map((n: any) => num(n, 1, 7, 1)) : [],
-    lat,
-    lng,
-    isCamouflaged: camo,
-    offsetRadiusMeters: num(body.offsetRadiusMeters, 10, 5000, 300),
-    beaconBroadcastRadiusKm: num(body.beaconBroadcastRadiusKm, 0.1, 100, 5),
-    broadcastVisibility: body.broadcastVisibility === 'radius' ? 'radius' : 'all',
-    lastActive: Date.now(),
-    receivedSanityCount: num(body.receivedSanityCount, 0, 99999, 0),
-    isOnline: true,
-  };
-
-  const hash = geohashEncode(lat, lng, PRECISION);
-  const bucket = await getBucket(env.RADAR_KV, hash);
-  const updated = [...bucket.filter((d) => d.id !== id), doc];
-  await putBucket(env.RADAR_KV, hash, updated);
-
-  // Coarse bucket (precision 4) is only consulted when scanning with
-  // radiusKm > 8. Maintain it for doctors whose broadcast radius is large
-  // enough to be found by those scans, OR who broadcast to everyone —
-  // halves steady-state writes and conserves the free-tier KV write quota.
-  if (doc.broadcastVisibility === 'all' || (doc.beaconBroadcastRadiusKm || 5) > 8) {
-    const coarseHash = geohashEncode(lat, lng, 4);
-    const coarseBucket = await getBucket(env.RADAR_KV, `c:${coarseHash}`);
-    const coarseUpdated = [...coarseBucket.filter((d) => d.id !== id), doc];
-    await putBucket(env.RADAR_KV, `c:${coarseHash}`, coarseUpdated);
-  }
-
-  return json({ ok: true, geohash: hash });
+  return json({ ok: true, geohash: geohashEncode(lat, lng, PRECISION) });
 }
 
 async function handleScan(request: Request, env: Env): Promise<Response> {
@@ -254,30 +142,23 @@ async function handleScan(request: Request, env: Env): Promise<Response> {
 
   if (!lat && !lng) return json({ error: 'Missing coordinates' }, 400);
 
-  // 全域模式：前端对「探测半径=全域」传一个超大哨兵半径(>=10000)，
-  // 此时返回广域格内所有符合条件的在线博士，不再按距离截断。
   const globalMode = (() => {
     if (radiusRaw === 'all' || radiusRaw === 'global') return true;
     const n = Number(radiusRaw);
     return Number.isFinite(n) && n >= 10000;
   })();
-
   const radiusKm = globalMode ? 100 : num(radiusRaw, 0.1, 100, 5);
 
-  const { doctors, scanCache, scannedCells } = await scanNearby(
-    env.RADAR_KV,
-    lat,
-    lng,
-    radiusKm,
-    globalMode,
-    excludeId,
+  const res = await presenceStub(env).fetch(
+    `https://presence.local/snapshot?lat=${lat}&lng=${lng}&radius=${radiusKm}&exclude=${encodeURIComponent(excludeId)}&global=${globalMode ? '1' : '0'}`,
   );
+  const data: any = await res.json().catch(() => ({ ok: false }));
 
   return json({
     ok: true,
-    doctors,
-    scan_cache: scanCache,
-    scan_cells: scannedCells,
+    doctors: Array.isArray(data?.doctors) ? data.doctors : [],
+    scan_cache: data?.scan_cache || 'ws',
+    scan_cells: data?.scan_cells ?? 0,
   });
 }
 
@@ -288,26 +169,16 @@ async function handleInteract(request: Request, env: Env): Promise<Response> {
   const validTypes = ['SANITY', 'INVITE', 'CLUE', 'PING'];
   const type = str(body.type, 10);
   if (!validTypes.includes(type)) return json({ error: 'Invalid interaction type' }, 400);
+  if (!str(body.toDoctorId, 64)) return json({ error: 'Missing toDoctorId' }, 400);
 
-  const toId = str(body.toDoctorId, 64);
-  if (!toId) return json({ error: 'Missing toDoctorId' }, 400);
-
-  const item: InboxItem = {
-    id: `it_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    type,
-    fromDoctorId: str(body.fromDoctorId, 64),
-    fromDoctorName: str(body.fromDoctorName, 48),
-    fromAssistantName: str(body.fromAssistantName, 48),
-    toDoctorId: toId,
-    timestamp: Date.now(),
-    message: str(body.message, 500),
-  };
-
-  const key = `inbox:${toId}`;
-  const existing: InboxItem[] = (await env.RADAR_KV.get<InboxItem[]>(key, 'json')) || [];
-  const updated = [item, ...existing].slice(0, MAX_INBOX);
-  await env.RADAR_KV.put(key, JSON.stringify(updated), { expirationTtl: INBOX_TTL });
-
+  // Written to D1 + pushed to the recipient's live socket by the DO.
+  const res = await presenceStub(env).fetch('https://presence.local/interact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data: any = await res.json().catch(() => ({ ok: false }));
+  if (!data?.ok) return json({ error: 'Failed to deliver' }, 502);
   return json({ ok: true });
 }
 
@@ -316,20 +187,38 @@ async function handleInbox(request: Request, env: Env): Promise<Response> {
   const id = url.searchParams.get('id') || '';
   if (!id) return json({ error: 'Missing id' }, 400);
 
-  const key = `inbox:${id}`;
-  const items: InboxItem[] = (await env.RADAR_KV.get<InboxItem[]>(key, 'json')) || [];
+  const { results } = await env.DB.prepare(
+    `SELECT id, type, from_doctor_id, from_doctor_name, from_assistant_name, to_doctor_id, message, created_at
+     FROM inbox WHERE to_doctor_id = ? ORDER BY created_at DESC LIMIT 50`,
+  ).bind(id).all<InboxRow>().catch(() => ({ results: [] } as any));
 
-  // Clear inbox after reading
+  const items: InboxItem[] = results.map(rowToItem);
+
+  // Clear inbox after reading (matches legacy KV semantics).
   if (items.length > 0) {
-    await env.RADAR_KV.delete(key);
+    await env.DB.prepare('DELETE FROM inbox WHERE to_doctor_id = ?').bind(id).run().catch(() => {});
   }
 
   return json({ ok: true, items });
 }
 
+async function handleOffline(request: Request, env: Env): Promise<Response> {
+  let body: any;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const id = str(body.id, 64);
+  if (!id) return json({ ok: true }); // best effort
+
+  const res = await presenceStub(env).fetch('https://presence.local/remove', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id }),
+  });
+  await res.arrayBuffer(); // drain
+  return json({ ok: true });
+}
+
 // Proxy reverse geocoding through Gaode (AMap) WebService API.
-// Keeps the Gaode key server-side so clients only talk to our Worker origin.
-// Key is injected via the GAODE_KEY secret — never hardcode it in source.
 function gaodeKey(env: Env): string {
   return env.GAODE_KEY || '';
 }
@@ -343,8 +232,8 @@ function getGaodeUrl(env: Env, path: string, params: Record<string, string>): st
 
 async function handleGeoReverse(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
-  const lat = num(url.searchParams.get('lat'), -85, 85, null);
-  const lng = num(url.searchParams.get('lng'), -180, 180, null);
+  const lat = num(url.searchParams.get('lat'), -85, 85, null as any);
+  const lng = num(url.searchParams.get('lng'), -180, 180, null as any);
   if (lat === null || lng === null) return json({ ok: false, error: 'lat/lng required' }, 400);
 
   const gaodeUrl = getGaodeUrl(env, 'geocode/regeo', {
@@ -354,7 +243,6 @@ async function handleGeoReverse(request: Request, env: Env): Promise<Response> {
   if (!gaodeUrl) return json({ ok: false, error: 'Gaode key not configured' });
 
   try {
-    // Gaode regeo expects location=lng,lat
     const res = await fetch(gaodeUrl);
     const data: any = await res.json();
     const comp = data?.regeocode?.addressComponent;
@@ -365,13 +253,7 @@ async function handleGeoReverse(request: Request, env: Env): Promise<Response> {
       const street = comp.streetNumber?.street || comp.township || '';
       const formatted = data.regeocode.formattedAddress
         || [province, city, district, street].filter(Boolean).join('');
-      return json({
-        ok: true,
-        address: formatted,
-        city,
-        district,
-        street,
-      });
+      return json({ ok: true, address: formatted, city, district, street });
     }
     return json({ ok: false, error: data?.info || 'Gaode geo failed' });
   } catch (e: any) {
@@ -391,24 +273,15 @@ async function handleGeoIP(request: Request, env: Env): Promise<Response> {
   }
 
   const gaodeUrl = getGaodeUrl(env, 'ip', { ip: clientIP, type: '4' });
-  // Use Gaode IP geolocation API for precise location
   try {
     const res = await fetch(gaodeUrl || '');
     const data: any = await res.json();
     if (data.status === '1' && data.location) {
       const [lng, lat] = data.location.split(',').map(Number);
       if (lat && lng) {
-        return json({
-          ok: true,
-          lat,
-          lng,
-          city: data.city || data.province || '',
-          country: data.country || '中国',
-          clientIP,
-        });
+        return json({ ok: true, lat, lng, city: data.city || data.province || '', country: data.country || '中国', clientIP });
       }
     }
-    // Fallback to CF edge location
     if (cf?.latitude && cf?.longitude) {
       return json({
         ok: true,
@@ -420,7 +293,6 @@ async function handleGeoIP(request: Request, env: Env): Promise<Response> {
       });
     }
   } catch (e: any) {
-    // Fallback to CF edge location
     if (cf?.latitude && cf?.longitude) {
       return json({
         ok: true,
@@ -436,25 +308,8 @@ async function handleGeoIP(request: Request, env: Env): Promise<Response> {
   return json({ ok: false, error: 'All geolocation methods failed', clientIP });
 }
 
-async function handleOffline(request: Request, env: Env): Promise<Response> {
-  let body: any;
-  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-
-  const id = str(body.id, 64);
-  const lat = num(body.lat, -85, 85, 0);
-  const lng = num(body.lng, -180, 180, 0);
-
-  if (!id || (!lat && !lng)) return json({ ok: true }); // best effort
-
-  await removeFromBuckets(env.RADAR_KV, id, lat, lng);
-
-  return json({ ok: true });
-}
-
 // ---------------------------------------------------------------------------
 // Simple per-isolate rate limiter (best-effort abuse prevention)
-// Uses in-memory Map — resets per isolate, no KV writes. Blocks excessive
-// requests from the same IP within a short window.
 // ---------------------------------------------------------------------------
 interface RateEntry { count: number; resetAt: number; }
 const rateBuckets = new Map<string, RateEntry>();
@@ -497,10 +352,13 @@ export default {
       });
     }
 
+    // WebSocket upgrade → hand off to the Presence DO.
+    if (url.pathname === '/api/radar/ws') {
+      return presenceStub(env).fetch(request);
+    }
+
     // API routes
     if (url.pathname.startsWith('/api/')) {
-      // Rate limit write endpoints (ping/interact/offline) per IP:
-      // 10 requests / 10s window — blocks naive flood abuse, generous for real users
       const isWriteEndpoint =
         (url.pathname === '/api/radar/ping' && request.method === 'POST') ||
         (url.pathname === '/api/radar/interact' && request.method === 'POST') ||
@@ -540,3 +398,27 @@ export default {
     return new Response('Not Found', { status: 404 });
   },
 };
+
+interface InboxRow {
+  id: string;
+  type: string;
+  from_doctor_id: string;
+  from_doctor_name: string | null;
+  from_assistant_name: string | null;
+  to_doctor_id: string;
+  message: string | null;
+  created_at: number;
+}
+
+function rowToItem(r: InboxRow): InboxItem {
+  return {
+    id: r.id,
+    type: r.type,
+    fromDoctorId: r.from_doctor_id,
+    fromDoctorName: r.from_doctor_name || '',
+    fromAssistantName: r.from_assistant_name || '',
+    toDoctorId: r.to_doctor_id,
+    message: r.message || '',
+    timestamp: r.created_at,
+  };
+}

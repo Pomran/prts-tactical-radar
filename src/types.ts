@@ -104,6 +104,43 @@ export interface TacticalInteraction {
   details?: any;
 }
 
+/** Light presence pushed over WebSocket (Level 1 realtime). */
+export interface LightPresence {
+  id: string;
+  name: string;
+  title: string;
+  level: number;
+  uid: string;
+  server: ServerRegion;
+  assistant: Operator;
+  supportOperators: {
+    operator: Operator;
+    level: number;
+    elite: number;
+    skillLevel: string;
+  }[];
+  motto: string;
+  wantedClues: number[];
+  extraClues: number[];
+  lat: number;
+  lng: number;
+  isCamouflaged: boolean;
+  offsetRadiusMeters: number;
+  beaconBroadcastRadiusKm: number;
+  broadcastVisibility: 'all' | 'radius';
+  lastActive: number;
+  receivedSanityCount: number;
+  isOnline: boolean;
+}
+
+/** Messages the Presence WS can push to the client. */
+export type PresenceMessage =
+  | { type: 'presence:init'; users: LightPresence[] }
+  | { type: 'presence:join'; user: LightPresence }
+  | { type: 'presence:update'; user: LightPresence }
+  | { type: 'presence:leave'; userId: string }
+  | { type: 'inbox:deliver'; items: TacticalInteraction[] };
+
 export interface PromptTemplate {
   id: string;
   title: string;

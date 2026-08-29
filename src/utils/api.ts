@@ -4,7 +4,7 @@
  * Communicates with the Cloudflare Worker backend for real presence + scan.
  * Falls back gracefully when the backend is unavailable (local dev / no worker).
  */
-import { DoctorProfile, Operator, TacticalInteraction, ServerRegion, RadarFilter } from '../types';
+import { DoctorProfile, Operator, TacticalInteraction, ServerRegion, RadarFilter, LightPresence } from '../types';
 import { OPERATOR_DATABASE } from '../data/operators';
 
 // ---------------------------------------------------------------------------
@@ -160,6 +160,77 @@ async function jfetch(url: string, init?: RequestInit): Promise<any> {
   return res.json();
 }
 
+/** Map a wire presence (from scan or WS push) into a displayable DoctorProfile. */
+export function toDoctorProfile(d: any): DoctorProfile {
+  const assistant = fromWire(d.assistant || {});
+  const supports = (d.supportOperators || []).map((s: any) => ({
+    operator: fromWire(s.operator || {}),
+    level: s.level ?? 90,
+    elite: s.elite ?? 2,
+    skillLevel: s.skillLevel ?? '专精 3',
+  }));
+
+  // Build lastActive string
+  let lastActive = '刚刚在线';
+  if (d.lastActive) {
+    const mins = Math.floor((Date.now() - d.lastActive) / 60000);
+    lastActive = mins < 1 ? '刚刚在线' : `${mins}分钟前`;
+  }
+
+  return {
+    id: d.id,
+    name: d.name || 'Doctor',
+    title: d.title || '罗德岛指挥官',
+    level: d.level || 120,
+    uid: d.uid || '--------',
+    server: (d.server || 'CN_OFFICIAL') as ServerRegion,
+    assistant,
+    sanity: { current: 100, max: 135 }, // not broadcast
+    motto: d.motto || '',
+    supportOperators: supports,
+    wantedClues: d.wantedClues || [],
+    extraClues: d.extraClues || [],
+    lat: d.lat,
+    lng: d.lng,
+    jitterLat: d.lat,
+    jitterLng: d.lng,
+    isCamouflaged: d.isCamouflaged ?? false,
+    offsetRadiusMeters: d.offsetRadiusMeters ?? 300,
+    beaconBroadcastRadiusKm: d.beaconBroadcastRadiusKm ?? 5,
+    broadcastVisibility: d.broadcastVisibility ?? 'all',
+    lastActive,
+    receivedSanityCount: d.receivedSanityCount ?? 0,
+    isOnline: d.isOnline ?? true,
+    distance: d.distance ?? 0,
+  } satisfies DoctorProfile;
+}
+
+/** Map a DoctorProfile into the wire presence payload shared by ping + WS. */
+export function toLightPresence(p: DoctorProfile): LightPresence {
+  return {
+    id: p.id,
+    name: p.name,
+    title: p.title,
+    level: p.level,
+    uid: p.uid,
+    server: p.server,
+    assistant: p.assistant,
+    supportOperators: p.supportOperators,
+    motto: p.motto,
+    wantedClues: p.wantedClues,
+    extraClues: p.extraClues,
+    lat: p.lat,
+    lng: p.lng,
+    isCamouflaged: p.isCamouflaged,
+    offsetRadiusMeters: p.offsetRadiusMeters ?? 300,
+    beaconBroadcastRadiusKm: p.beaconBroadcastRadiusKm ?? 5,
+    broadcastVisibility: p.broadcastVisibility || 'all',
+    lastActive: Date.now(),
+    receivedSanityCount: p.receivedSanityCount ?? 0,
+    isOnline: true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Presence ping — throttled to conserve the free-tier KV write quota
 // (Cloudflare Workers KV caps writes at 1000/day).
@@ -220,50 +291,7 @@ export const radarApi = {
     const data = await jfetch(
       `/api/radar/scan?lat=${lat}&lng=${lng}&radius=${radiusKm}&exclude=${encodeURIComponent(excludeId)}`,
     );
-
-    return (data.doctors || []).map((d: any) => {
-      const assistant = fromWire(d.assistant || {});
-      const supports = (d.supportOperators || []).map((s: any) => ({
-        operator: fromWire(s.operator || {}),
-        level: s.level ?? 90,
-        elite: s.elite ?? 2,
-        skillLevel: s.skillLevel ?? '专精 3',
-      }));
-
-      // Build lastActive string
-      let lastActive = '刚刚在线';
-      if (d.lastActive) {
-        const mins = Math.floor((Date.now() - d.lastActive) / 60000);
-        lastActive = mins < 1 ? '刚刚在线' : `${mins}分钟前`;
-      }
-
-      return {
-        id: d.id,
-        name: d.name || 'Doctor',
-        title: d.title || '罗德岛指挥官',
-        level: d.level || 120,
-        uid: d.uid || '--------',
-        server: (d.server || 'CN_OFFICIAL') as ServerRegion,
-        assistant,
-        sanity: { current: 100, max: 135 }, // not broadcast
-        motto: d.motto || '',
-        supportOperators: supports,
-        wantedClues: d.wantedClues || [],
-        extraClues: d.extraClues || [],
-        lat: d.lat,
-        lng: d.lng,
-        jitterLat: d.lat,
-        jitterLng: d.lng,
-        isCamouflaged: d.isCamouflaged ?? false,
-        offsetRadiusMeters: d.offsetRadiusMeters ?? 300,
-        beaconBroadcastRadiusKm: d.beaconBroadcastRadiusKm ?? 5,
-        broadcastVisibility: d.broadcastVisibility ?? 'all',
-        lastActive,
-        receivedSanityCount: d.receivedSanityCount ?? 0,
-        isOnline: d.isOnline ?? true,
-        distance: d.distance ?? 0,
-      } satisfies DoctorProfile;
-    });
+    return (data.doctors || []).map(toDoctorProfile);
   },
 
   /** Send an interaction (fire-and-forget) */

@@ -12,12 +12,37 @@
     { "pattern": "your-domain.example.com/*", "zone_name": "your-zone-name" }
   ],
 
+  // Legacy KV presence — no longer on the write path. Presence lives in the
+  // PresenceCoordinator Durable Object; KV binding is kept for compat reads.
   // Replace `your-kv-namespace-id` with your own RADAR_KV namespace id.
-  // Create one via: npx wrangler kv namespace create RADAR_KV
   "kv_namespaces": [
     {
       "binding": "RADAR_KV",
       "id": "your-kv-namespace-id"
+    }
+  ],
+
+  // Realtime presence (Level 1) — single "global" instance.
+  "durable_objects": {
+    "bindings": [
+      { "name": "PRESENCE", "class_name": "PresenceCoordinator" }
+    ]
+  },
+
+  // DO migrations must be applied via a non-versioned `wrangler deploy`
+  // (versions upload rejects Durable Object migrations).
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["PresenceCoordinator"] }
+  ],
+
+  // Level 2/3 persistence (profiles, last-seen, inbox).
+  // Create via: npx wrangler d1 create prts-radar
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "prts-radar",
+      "database_id": "your-d1-database-id",
+      "migrations_dir": "./migrations"
     }
   ],
 

@@ -6,12 +6,13 @@ import { CommsLogModal } from './components/CommsLogModal';
 import { DoctorDetailModal } from './components/DoctorDetailModal';
 import { MyProfileModal } from './components/MyProfileModal';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
-import { DoctorProfile, RadarFilter, TacticalInteraction } from './types';
+import { DoctorProfile, RadarFilter, TacticalInteraction, LightPresence } from './types';
 import { OPERATOR_DATABASE } from './data/operators';
-import { TACTICAL_HOTSPOTS, applyJitter, wgs84ToGcj02 } from './utils/geoutils';
+import { TACTICAL_HOTSPOTS, applyJitter, wgs84ToGcj02, calculateDistance } from './utils/geoutils';
 import { getRadarCellSignature } from '@/shared/radarSpatial';
 import { prtsAudio } from './utils/audio';
-import { radarApi, getDeviceId, loadProfileSettings, saveProfileSettings, loadFilterSettings, saveFilterSettings } from './utils/api';
+import { radarApi, getDeviceId, loadProfileSettings, saveProfileSettings, loadFilterSettings, saveFilterSettings, toLightPresence, toDoctorProfile } from './utils/api';
+import { PresenceSocket } from './utils/ws';
 
 // 全域扫描哨兵半径：默认探测半径即为「全域」，向后端传一个超大的哨兵值以返回广域所有在线博士。
 export const GLOBAL_SCAN_SENTINEL = 10000;
@@ -287,6 +288,10 @@ export default function App() {
   const lastScanSigRef = useRef<string>('');
   // P3: last time the user sent an interaction — drives a temporary faster inbox poll.
   const lastInteractAtRef = useRef<number>(0);
+  // Presence WS (Level 1 realtime) + the live visible-user map it maintains.
+  const presenceSocketRef = useRef<PresenceSocket | null>(null);
+  const visibleUsersRef = useRef<Map<string, DoctorProfile>>(new Map());
+  const lastWsPresenceAtRef = useRef<number>(0);
 
   // -----------------------------------------------------------------------
   // Persist user settings to localStorage whenever they change (debounced-ish)
@@ -328,7 +333,29 @@ export default function App() {
   }, []);
 
   // -----------------------------------------------------------------------
-  // Scan nearby doctors via real API
+  // Inbox items — shared by the HTTP poll AND the WS `inbox:deliver` push.
+  // -----------------------------------------------------------------------
+  const handleInboxItems = useCallback((items: TacticalInteraction[]) => {
+    if (!items || items.length === 0) return;
+    setCommsLogs((prev) => [...items, ...prev].slice(0, 200));
+
+    // Apply received sanity potions
+    const sanityCount = items.filter((i) => i.type === 'SANITY').length;
+    if (sanityCount > 0) {
+      setMyProfile((p) => ({
+        ...p,
+        sanity: {
+          ...p.sanity,
+          current: Math.min(p.sanity.max, p.sanity.current + sanityCount * 10),
+        },
+        receivedSanityCount: p.receivedSanityCount + sanityCount,
+      }));
+      prtsAudio.playSanityChime();
+    }
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Scan nearby doctors via real API (HTTP fallback) — primary is the WS.
   // -----------------------------------------------------------------------
   const refreshNearby = useCallback(async (lat: number, lng: number, force = false) => {
     // 全域扫描时向后端传一个极大的哨兵半径，用于返回广域内的所有在线博士
@@ -351,15 +378,112 @@ export default function App() {
   }, []);
 
   // -----------------------------------------------------------------------
+  // Recompute the visible radar list from the WS presence map (Level 1).
+  // The server already pushed ONLY doctors I'm allowed to see (privacy gate),
+  // so this is a pure client-side radius/filter/sort.
+  // -----------------------------------------------------------------------
+  const recomputeNearbyFromPresence = useCallback(() => {
+    const p = profileRef.current;
+    const f = filterRef.current;
+    const radiusKm = f.scanGlobal ? GLOBAL_SCAN_SENTINEL : f.radiusKm;
+    const out: DoctorProfile[] = [];
+
+    // The DO only pushes LIVE presences (memory map), so no TTL check needed here.
+    for (const doc of visibleUsersRef.current.values()) {
+      if (doc.id === p.id) continue;
+      const dist = calculateDistance(p.lat, p.lng, doc.lat, doc.lng);
+      if (!f.scanGlobal && dist > radiusKm * 1000) continue;
+      out.push({ ...doc, distance: dist });
+    }
+    out.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
+    setNearbyDoctors(out);
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Push my presence over WS (register + heartbeat on location change).
+  // Falls back to HTTP ping when the socket is down.
+  // -----------------------------------------------------------------------
+  const pushPresence = useCallback((lat?: number, lng?: number) => {
+    const sock = presenceSocketRef.current;
+    const p = profileRef.current;
+    if (sock && sock.isConnected()) {
+      const payload = toLightPresence({
+        ...p,
+        lat: lat ?? p.lat,
+        lng: lng ?? p.lng,
+      });
+      sock.sendPresence(payload);
+      return;
+    }
+    // HTTP fallback (throttled client-side by api.ts)
+    radarApi.ping({ ...p, lat: lat ?? p.lat, lng: lng ?? p.lng }).catch(() => {});
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Re-run the local radar list when filters or my location change (WS mode
+  // recomputes purely client-side; HTTP mode already fetched filtered results).
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const sock = presenceSocketRef.current;
+    if (sock && sock.isConnected()) recomputeNearbyFromPresence();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, myProfile.lat, myProfile.lng, myProfile.id]);
+
+  // -----------------------------------------------------------------------
+  // Presence WS lifecycle: connect, apply deltas into the visible map,
+  // recompute the radar, and deliver inbox items pushed over the socket.
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const sock = new PresenceSocket();
+    presenceSocketRef.current = sock;
+
+    const unsubMsg = sock.subscribe((msg) => {
+      if (msg.type === 'presence:init') {
+        const map = new Map<string, DoctorProfile>();
+        for (const u of msg.users) map.set(u.id, toDoctorProfile(u));
+        visibleUsersRef.current = map;
+        recomputeNearbyFromPresence();
+      } else if (msg.type === 'presence:join') {
+        visibleUsersRef.current.set(msg.user.id, toDoctorProfile(msg.user));
+        recomputeNearbyFromPresence();
+      } else if (msg.type === 'presence:update') {
+        visibleUsersRef.current.set(msg.user.id, toDoctorProfile(msg.user));
+        recomputeNearbyFromPresence();
+      } else if (msg.type === 'presence:leave') {
+        visibleUsersRef.current.delete(msg.userId);
+        recomputeNearbyFromPresence();
+      } else if (msg.type === 'inbox:deliver') {
+        handleInboxItems(msg.items);
+      }
+    });
+
+    const unsubStatus = sock.onStatus((connected) => {
+      if (connected) {
+        pushPresence();
+        lastWsPresenceAtRef.current = Date.now();
+      }
+    });
+
+    sock.start();
+
+    return () => {
+      unsubMsg();
+      unsubStatus();
+      sock.stop();
+      presenceSocketRef.current = null;
+    };
+  }, [pushPresence, recomputeNearbyFromPresence, handleInboxItems]);
+
+  // -----------------------------------------------------------------------
   // Manual refresh: report presence (ping) + rescan nearby doctors.
   // Only happens when the user clicks the sonar refresh button. Force bypasses
   // the P1 dedup so the user always gets a fresh scan.
   // -----------------------------------------------------------------------
   const handleManualRefresh = useCallback(() => {
     const p = profileRef.current;
-    radarApi.ping({ ...p, lat: p.lat, lng: p.lng }).catch(() => {});
+    pushPresence(p.lat, p.lng);
     return refreshNearby(p.lat, p.lng, true);
-  }, [refreshNearby]);
+  }, [pushPresence, refreshNearby]);
 
   // -----------------------------------------------------------------------
   // P1: rescan (forced) when the app returns to the foreground, so data is
@@ -376,12 +500,13 @@ export default function App() {
   }, [refreshNearby]);
 
   // -----------------------------------------------------------------------
-  // Heartbeat: ping only on initial mount + explicit user actions.
-  // Intentionally NOT on a timer — Cloudflare KV free tier caps writes at
-  // 1000/day, and a frequent heartbeat would blow that quota quickly.
+  // Heartbeat: register presence on mount. Over WS this is the socket's first
+  // presence:set; HTTP ping is the fallback. Presence updates happen over WS
+  // as the user moves; there is deliberately no periodic ping timer.
   // -----------------------------------------------------------------------
   useEffect(() => {
-    radarApi.ping(profileRef.current).catch(() => {});
+    pushPresence();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // -----------------------------------------------------------------------
@@ -398,22 +523,8 @@ export default function App() {
     const poll = async () => {
       try {
         const items = await radarApi.inbox(profileRef.current.id);
-        if (stopped || items.length === 0) return;
-        setCommsLogs((prev) => [...items, ...prev].slice(0, 200));
-
-        // Apply received sanity potions
-        const sanityCount = items.filter((i) => i.type === 'SANITY').length;
-        if (sanityCount > 0) {
-          setMyProfile((p) => ({
-            ...p,
-            sanity: {
-              ...p.sanity,
-              current: Math.min(p.sanity.max, p.sanity.current + sanityCount * 10),
-            },
-            receivedSanityCount: p.receivedSanityCount + sanityCount,
-          }));
-          prtsAudio.playSanityChime();
-        }
+        if (stopped) return;
+        handleInboxItems(items);
       } catch { /* ignore */ }
     };
 
@@ -466,6 +577,16 @@ export default function App() {
         const jitter = applyJitter(lat, lng);
         setMyProfile((prev) => ({ ...prev, lat, lng, jitterLat: jitter.lat, jitterLng: jitter.lng, accuracy: acc }));
         setLocationName(`GPS 定位 · 精度 ±${Math.round(acc)}m`);
+        // WS mode: push live position (throttled ~10s); HTTP fallback: scan.
+        const sock = presenceSocketRef.current;
+        if (sock && sock.isConnected()) {
+          const now = Date.now();
+          if (now - lastWsPresenceAtRef.current > 10_000) {
+            lastWsPresenceAtRef.current = now;
+            pushPresence(lat, lng);
+          }
+          return;
+        }
         refreshNearby(lat, lng);
       },
       async (lat, lng, acc) => {
@@ -496,7 +617,7 @@ export default function App() {
         setMyProfile((prev) => ({ ...prev, lat: browserGeo.lat, lng: browserGeo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng, accuracy: browserGeo.accuracy }));
         setLocationName(`GPS 定位 · 精度 ±${Math.round(browserGeo.accuracy)}m`);
         refreshNearby(browserGeo.lat, browserGeo.lng);
-        radarApi.ping({ ...profileRef.current, lat: browserGeo.lat, lng: browserGeo.lng }).catch(() => {});
+        pushPresence(browserGeo.lat, browserGeo.lng);
         return;
       }
 
@@ -507,7 +628,7 @@ export default function App() {
         setMyProfile((prev) => ({ ...prev, lat: gaodeGeo.lat, lng: gaodeGeo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`Gaode 定位 · ${gaodeGeo.city} [${gaodeGeo.lat.toFixed(2)}, ${gaodeGeo.lng.toFixed(2)}]`);
         refreshNearby(gaodeGeo.lat, gaodeGeo.lng);
-        radarApi.ping({ ...profileRef.current, lat: gaodeGeo.lat, lng: gaodeGeo.lng }).catch(() => {});
+        pushPresence(gaodeGeo.lat, gaodeGeo.lng);
         return;
       }
 
@@ -518,7 +639,7 @@ export default function App() {
         setMyProfile((prev) => ({ ...prev, lat: geo.lat, lng: geo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`IP 定位 · ${geo.city} [${geo.lat.toFixed(2)}, ${geo.lng.toFixed(2)}]`);
         refreshNearby(geo.lat, geo.lng);
-        radarApi.ping({ ...profileRef.current, lat: geo.lat, lng: geo.lng }).catch(() => {});
+        pushPresence(geo.lat, geo.lng);
         return;
       }
 
@@ -545,6 +666,7 @@ export default function App() {
         setMyProfile((prev) => ({ ...prev, lat: gaodeGeo.lat, lng: gaodeGeo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`Gaode 定位 · ${gaodeGeo.city} [${gaodeGeo.lat.toFixed(2)}, ${gaodeGeo.lng.toFixed(2)}]`);
         refreshNearby(gaodeGeo.lat, gaodeGeo.lng);
+        pushPresence(gaodeGeo.lat, gaodeGeo.lng);
         setIsScanning(false);
         beginGpsWatch();
         return;
@@ -555,6 +677,7 @@ export default function App() {
         setMyProfile((prev) => ({ ...prev, lat: geo.lat, lng: geo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`IP 定位 · ${geo.city} [${geo.lat.toFixed(2)}, ${geo.lng.toFixed(2)}]`);
         refreshNearby(geo.lat, geo.lng);
+        pushPresence(geo.lat, geo.lng);
         setIsScanning(false);
         beginGpsWatch();
         return;
@@ -577,6 +700,7 @@ export default function App() {
           setMyProfile((prev) => ({ ...prev, lat: gcj.lat, lng: gcj.lng, jitterLat: jitter.lat, jitterLng: jitter.lng, accuracy }));
           setLocationName(`GPS 定位 · 精度 ±${Math.round(accuracy)}m [${gcj.lat.toFixed(4)}, ${gcj.lng.toFixed(4)}]`);
           refreshNearby(gcj.lat, gcj.lng);
+          pushPresence(gcj.lat, gcj.lng);
           prtsAudio.playTargetDetected();
           setIsScanning(false);
           beginGpsWatch();
