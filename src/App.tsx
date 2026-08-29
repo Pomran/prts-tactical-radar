@@ -254,6 +254,8 @@ export default function App() {
   // -----------------------------------------------------------------------
   const [nearbyDoctors, setNearbyDoctors] = useState<DoctorProfile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  // Persistent beacon deployed at my current location (常驻信标).
+  const [beaconActive, setBeaconActive] = useState(false);
 
   // -----------------------------------------------------------------------
   // Filters
@@ -544,6 +546,8 @@ export default function App() {
   // -----------------------------------------------------------------------
   useEffect(() => {
     pushPresence();
+    // Restore beacon status on load (so the navbar toggle reflects reality).
+    radarApi.hasBeacon(profileRef.current.id).then((h) => setBeaconActive(h)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -799,7 +803,7 @@ export default function App() {
     if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return false;
     try {
       await radarApi.placeBeacon(p, message);
-      // Refresh the beacon set so my own beacon disappears (excluded) locally.
+      setBeaconActive(true);
       await refreshBeacons(p.lat, p.lng);
       prtsAudio.playRadarPing();
       return true;
@@ -813,6 +817,7 @@ export default function App() {
     try {
       await radarApi.removeBeacon(p.id);
       beaconsRef.current.delete(p.id);
+      setBeaconActive(false);
       recomputeNearbyFromPresence();
       return true;
     } catch {
@@ -820,7 +825,13 @@ export default function App() {
     }
   }, [recomputeNearbyFromPresence]);
 
-  const hasActiveBeacon = useCallback(() => beaconsRef.current.has(profileRef.current.id), []);
+  /** Quick toggle used by the navbar: deploy (at current location) or retract. */
+  const handleToggleBeacon = useCallback(async () => {
+    if (beaconActive) {
+      return handleRemoveBeacon();
+    }
+    return handlePlaceBeacon('');
+  }, [beaconActive, handlePlaceBeacon, handleRemoveBeacon]);
 
   // -----------------------------------------------------------------------
   // Interactions — local log + fire-and-forget API call
@@ -954,6 +965,8 @@ export default function App() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onRelocate={handleUseRealGPS}
         onToggleCamouflage={handleToggleCamouflage}
+        beaconActive={beaconActive}
+        onToggleBeacon={handleToggleBeacon}
         nearbyCount={filteredDoctors.length}
         locationName={locationName}
       />
@@ -1005,7 +1018,7 @@ export default function App() {
           profile={myProfile}
           onSave={(updated) => { setMyProfile(updated); setIsProfileModalOpen(false); }}
           onClose={() => setIsProfileModalOpen(false)}
-          hasBeacon={hasActiveBeacon()}
+          hasBeacon={beaconActive}
           onPlaceBeacon={handlePlaceBeacon}
           onRemoveBeacon={handleRemoveBeacon}
         />

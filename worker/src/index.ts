@@ -13,7 +13,7 @@
  */
 import { Env } from './env';
 import { PresenceCoordinator } from './presence';
-import { sanitizeBeacon, putBeacon, removeBeacon, queryBeacons, refreshBeaconOnOnline } from './beacon';
+import { sanitizeBeacon, putBeacon, removeBeacon, queryBeacons, queryMyBeacon, refreshBeaconOnOnline } from './beacon';
 
 export { PresenceCoordinator };
 
@@ -252,6 +252,14 @@ async function handleBeaconDelete(request: Request, env: Env): Promise<Response>
   return json({ ok: true });
 }
 
+async function handleBeaconGet(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const id = url.searchParams.get('doctor_id') || '';
+  if (!id) return json({ error: 'Missing doctor_id' }, 400);
+  const row = await queryMyBeacon(env.DB, id);
+  return json({ ok: true, hasBeacon: !!row, expiresAt: row?.expires_at ?? null });
+}
+
 // Proxy reverse geocoding through Gaode (AMap) WebService API.
 function gaodeKey(env: Env): string {
   return env.GAODE_KEY || '';
@@ -420,6 +428,9 @@ export default {
         }
         if (url.pathname === '/api/radar/beacon' && request.method === 'POST') {
           return await handleBeaconPut(request, env);
+        }
+        if (url.pathname === '/api/radar/beacon' && request.method === 'GET') {
+          return await handleBeaconGet(request, env);
         }
         if (url.pathname === '/api/radar/beacon' && request.method === 'DELETE') {
           return await handleBeaconDelete(request, env);

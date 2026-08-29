@@ -339,4 +339,10 @@ export const radarApi = {
   async removeBeacon(id: string): Promise<void> {
     await jfetch(`/api/radar/beacon?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
   },
+
+  /** Whether a doctor currently has a live beacon. */
+  async hasBeacon(id: string): Promise<boolean> {
+    const data = await jfetch(`/api/radar/beacon?doctor_id=${encodeURIComponent(id)}`);
+    return !!data?.hasBeacon;
+  },
 };

@@ -27,6 +27,9 @@ interface PRTSNavbarProps {
   onOpenProfile: () => void;
   onRelocate: () => void;
   onToggleCamouflage: () => void;
+  /** Persistent beacon quick toggle (常驻信标). */
+  beaconActive: boolean;
+  onToggleBeacon: () => void;
   nearbyCount: number;
   locationName: string;
 }
@@ -38,6 +41,8 @@ export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
   onOpenProfile,
   onRelocate,
   onToggleCamouflage,
+  beaconActive,
+  onToggleBeacon,
   nearbyCount,
   locationName,
 }) => {
@@ -170,6 +175,20 @@ export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
         {/* Mobile quick icons */}
         <div className="flex md:hidden items-center gap-1.5">
           <button
+            onClick={() => {
+              prtsAudio.playClick();
+              onToggleBeacon();
+            }}
+            className={`p-1.5 border rounded flex items-center gap-1 transition-colors ${
+              beaconActive
+                ? 'bg-[#ffde00]/20 border-[#ffde00]/60 text-[#ffde00]'
+                : 'bg-slate-900 border-slate-700 text-slate-500'
+            }`}
+            title={beaconActive ? '撤收常驻信标' : '部署常驻信标'}
+          >
+            <Radio size={15} className={beaconActive ? 'animate-pulse' : ''} />
+          </button>
+          <button
             onClick={() => setIsAudioMenuOpen((prev) => !prev)}
             className={`p-1.5 border rounded flex items-center gap-1 transition-colors ${
               isMuted 
@@ -267,6 +286,23 @@ export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
               <span>战术迷彩: OFF</span>
             </>
           )}
+        </button>
+
+        {/* Persistent Beacon quick toggle (常驻信标) */}
+        <button
+          onClick={() => {
+            prtsAudio.playClick();
+            onToggleBeacon();
+          }}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-mono border transition-all ${
+            beaconActive
+              ? 'bg-[#ffde00]/20 text-[#ffde00] border-[#ffde00]/60 hover:bg-[#ffde00]/30 shadow-[0_0_8px_rgba(250,204,21,0.2)]'
+              : 'bg-[#141b24] text-slate-400 border-slate-700 hover:text-slate-200 hover:bg-[#1a2330]'
+          }`}
+          title={beaconActive ? '点击撤收常驻信标 (离线后他人将无法再看到你)' : '部署常驻信标:离线后他人仍可在雷达上看到你并发起加好友/互动'}
+        >
+          <Radio size={13} className={beaconActive ? 'animate-pulse' : ''} />
+          <span>{beaconActive ? '信标: 已部署' : '常驻信标: OFF'}</span>
         </button>
 
         {/* Tactical Global Audio Master Button */}

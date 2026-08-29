@@ -165,6 +165,18 @@ export async function queryBeacons(
   return out;
 }
 
+/** Check whether a doctor currently has a live beacon (returns the row). */
+export async function queryMyBeacon(db: D1Database, doctorId: string): Promise<BeaconRow | null> {
+  try {
+    const { results } = await db.prepare(
+      'SELECT doctor_id, profile_json, message, lat, lng, created_at, expires_at FROM beacons WHERE doctor_id = ? AND expires_at > ?',
+    ).bind(doctorId, Date.now()).all<BeaconRow>();
+    return results[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Refresh a beacon's TTL whenever the owner comes online (keeps active users' beacons alive). */
 export async function refreshBeaconOnOnline(db: D1Database, doctorId: string): Promise<void> {
   if (!doctorId) return;
