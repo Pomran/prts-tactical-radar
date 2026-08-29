@@ -4,7 +4,7 @@
  * Communicates with the Cloudflare Worker backend for real presence + scan.
  * Falls back gracefully when the backend is unavailable (local dev / no worker).
  */
-import { DoctorProfile, Operator, TacticalInteraction, ServerRegion, RadarFilter, LightPresence } from '../types';
+import { DoctorProfile, Operator, TacticalInteraction, ServerRegion, RadarFilter, LightPresence, WireOperator } from '../types';
 import { OPERATOR_DATABASE } from '../data/operators';
 
 // ---------------------------------------------------------------------------
@@ -81,15 +81,6 @@ export function loadFilterSettings(): RadarFilter | null {
 // ---------------------------------------------------------------------------
 // Wire helpers — map between API payloads and app types
 // ---------------------------------------------------------------------------
-interface WireOperator {
-  opId?: string;
-  dataUrl?: string;
-  name: string;
-  cnName: string;
-  color: string;
-  masterySkill?: string;
-}
-
 function toWire(op: Operator): WireOperator {
   const db = OPERATOR_DATABASE.find((o) => o.id === op.id);
   if (db && db.avatar === op.avatar) {
@@ -214,8 +205,13 @@ export function toLightPresence(p: DoctorProfile): LightPresence {
     level: p.level,
     uid: p.uid,
     server: p.server,
-    assistant: p.assistant,
-    supportOperators: p.supportOperators,
+    assistant: toWire(p.assistant),
+    supportOperators: p.supportOperators.map((s) => ({
+      operator: toWire(s.operator),
+      level: s.level,
+      elite: s.elite,
+      skillLevel: s.skillLevel,
+    })),
     motto: p.motto,
     wantedClues: p.wantedClues,
     extraClues: p.extraClues,

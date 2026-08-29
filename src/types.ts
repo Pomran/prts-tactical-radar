@@ -104,6 +104,23 @@ export interface TacticalInteraction {
   details?: any;
 }
 
+/** Wire format for an operator (assistant/support) over HTTP + WS. */
+export interface WireOperator {
+  opId?: string;
+  dataUrl?: string;
+  name: string;
+  cnName: string;
+  color: string;
+  masterySkill?: string;
+}
+
+export interface WireSupport {
+  operator: WireOperator;
+  level: number;
+  elite: number;
+  skillLevel: string;
+}
+
 /** Light presence pushed over WebSocket (Level 1 realtime). */
 export interface LightPresence {
   id: string;
@@ -112,13 +129,8 @@ export interface LightPresence {
   level: number;
   uid: string;
   server: ServerRegion;
-  assistant: Operator;
-  supportOperators: {
-    operator: Operator;
-    level: number;
-    elite: number;
-    skillLevel: string;
-  }[];
+  assistant: WireOperator;
+  supportOperators: WireSupport[];
   motto: string;
   wantedClues: number[];
   extraClues: number[];
