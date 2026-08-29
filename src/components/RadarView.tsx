@@ -260,6 +260,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
         const docLng = doc.isCamouflaged && doc.jitterLng ? doc.jitterLng : doc.lng;
 
         const isOnline = doc.isOnline;
+        const isBeacon = doc.isBeacon;
         const accentColor = safeColor(doc.assistant.color);
 
         const doctorIconHtml = `
@@ -272,6 +273,8 @@ export const RadarView: React.FC<RadarViewProps> = ({
               <img src="${esc(doc.assistant.avatar)}" class="w-full h-full object-cover rounded-full" />
               ${isOnline ? `
                 <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#0c121d]"></span>
+              ` : isBeacon ? `
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ffde00] border border-[#0c121d] animate-pulse"></span>
               ` : ''}
             </div>
 
@@ -279,6 +282,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
             <div class="mt-1 px-2 py-0.5 bg-[#090e17] border border-slate-700/80 group-hover:border-slate-500 text-[10px] text-slate-200 tracking-wide font-mono rounded shadow-lg whitespace-nowrap z-10 flex items-center gap-1.5 transition-colors">
               <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: ${accentColor};"></span>
               <span class="max-w-[70px] truncate font-medium text-slate-100">${esc(doc.name)}</span>
+              ${isBeacon ? '<span class="text-[8px] font-bold px-1 bg-[#ffde00]/20 text-[#ffde00] border border-[#ffde00]/40 rounded">信标</span>' : ''}
               <span class="text-[9px] font-semibold text-[#00e5ff]">
                 ${doc.distance ? (doc.distance < 1000 ? `${doc.distance}m` : `${(doc.distance/1000).toFixed(1)}km`) : '附近'}
               </span>
@@ -323,6 +327,13 @@ export const RadarView: React.FC<RadarViewProps> = ({
           <p class="text-[10px] text-slate-300 italic mb-2 bg-[#080d14]/70 p-1.5 rounded border-l-2 border-[#ffde00]">
             ${esc(doc.motto)}
           </p>
+
+          ${doc.isBeacon ? `
+            <div class="flex items-start gap-1.5 mb-2 bg-[#2a2208]/40 border border-[#ffde00]/40 rounded p-1.5 text-[9px] text-[#ffde00]">
+              <span class="flex-shrink-0">📡</span>
+              <span>${esc(doc.beaconMessage || '常驻信标 · 当前离线，但可向 TA 发送互动，上线后实时接收')}</span>
+            </div>
+          ` : ''}
 
           <div class="flex justify-between items-center text-[9px] text-slate-400 mb-2.5">
             <span>距离: <b class="text-[#00e5ff]">${doc.distance ? (doc.distance < 1000 ? `${doc.distance}米` : `${(doc.distance/1000).toFixed(1)}公里`) : '附近'}</b></span>

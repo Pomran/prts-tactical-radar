@@ -21,12 +21,19 @@ interface MyProfileModalProps {
   profile: DoctorProfile;
   onSave: (updated: DoctorProfile) => void;
   onClose: () => void;
+  /** Persistent beacon (常驻信标) state. */
+  hasBeacon?: boolean;
+  onPlaceBeacon?: (message: string) => Promise<boolean>;
+  onRemoveBeacon?: () => Promise<boolean>;
 }
 
 export const MyProfileModal: React.FC<MyProfileModalProps> = ({
   profile,
   onSave,
   onClose,
+  hasBeacon = false,
+  onPlaceBeacon,
+  onRemoveBeacon,
 }) => {
   const [name, setName] = useState(profile.name);
   const [level, setLevel] = useState(profile.level);
@@ -393,6 +400,34 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
             </div>
           </div>
 
+          {/* Persistent Beacon (常驻信标) — offline discoverability */}
+          <div className="bg-[#121c2a] p-3 rounded border border-slate-800 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <Radio size={14} className="text-[#ffde00]" />
+                  <span>常驻信标 (Persistent Beacon)</span>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  在当前位置部署一枚常驻信标。离线后其他博士仍能在雷达上看到您并向您发送互动(加好友/邀请/线索)，您上线时实时接收。
+                </p>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-1 rounded border ${
+                hasBeacon
+                  ? 'bg-[#ffde00]/20 text-[#ffde00] border-[#ffde00]/60'
+                  : 'bg-slate-800/60 text-slate-400 border-slate-700'
+              }`}>
+                {hasBeacon ? '信标已部署 (24h)' : '未部署'}
+              </span>
+            </div>
+
+            <BeaconControl
+              hasBeacon={hasBeacon}
+              onPlaceBeacon={onPlaceBeacon}
+              onRemoveBeacon={onRemoveBeacon}
+            />
+          </div>
+
           {/* Tactical Camouflage Toggle */}
           <div className="bg-[#121c2a] p-3 rounded border border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
@@ -464,3 +499,73 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
     </div>
   );
 };
+
+/** Inline control for deploying / removing the persistent beacon. */
+function BeaconControl({
+  hasBeacon,
+  onPlaceBeacon,
+  onRemoveBeacon,
+}: {
+  hasBeacon: boolean;
+  onPlaceBeacon?: (message: string) => Promise<boolean>;
+  onRemoveBeacon?: () => Promise<boolean>;
+}) {
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const place = async () => {
+    if (!onPlaceBeacon || busy) return;
+    setBusy(true);
+    const ok = await onPlaceBeacon(message);
+    setBusy(false);
+    setStatus(ok ? '✓ 信标已部署于当前位置 (有效 24 小时)' : '✕ 部署失败，请检查定位');
+    setTimeout(() => setStatus(null), 3000);
+  };
+
+  const remove = async () => {
+    if (!onRemoveBeacon || busy) return;
+    setBusy(true);
+    const ok = await onRemoveBeacon();
+    setBusy(false);
+    setStatus(ok ? '✓ 信标已移除' : '✕ 移除失败');
+    setTimeout(() => setStatus(null), 3000);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="信标留言 (可选，如「加好友一起打肉鸽」)"
+          maxLength={300}
+          className="flex-1 bg-[#0a0f16] border border-slate-700 rounded px-2.5 py-1.5 text-[11px] text-slate-200 placeholder-slate-500 outline-none focus:border-[#ffde00]/60"
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={place}
+          className={`px-3 py-1.5 rounded text-[11px] font-bold border transition-all ${
+            hasBeacon
+              ? 'bg-[#ffde00]/15 text-[#ffde00] border-[#ffde00]/50 hover:bg-[#ffde00]/25'
+              : 'bg-[#ffde00] text-slate-950 border-[#ffde00] hover:bg-[#fbbf24]'
+          }`}
+        >
+          {busy ? '处理中...' : hasBeacon ? '更新信标' : '部署信标'}
+        </button>
+      </div>
+      {hasBeacon && onRemoveBeacon && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={remove}
+          className="text-[10px] text-slate-500 hover:text-rose-400 underline underline-offset-2"
+        >
+          移除常驻信标
+        </button>
+      )}
+      {status && <p className="text-[10px] text-[#ffde00]">{status}</p>}
+    </div>
+  );
+}

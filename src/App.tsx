@@ -292,6 +292,8 @@ export default function App() {
   const presenceSocketRef = useRef<PresenceSocket | null>(null);
   const visibleUsersRef = useRef<Map<string, DoctorProfile>>(new Map());
   const lastWsPresenceAtRef = useRef<number>(0);
+  // Persistent beacons (Level 3) — offline discoverable doctors, fetched via HTTP scan.
+  const beaconsRef = useRef<Map<string, DoctorProfile>>(new Map());
 
   // -----------------------------------------------------------------------
   // Persist user settings to localStorage whenever they change (debounced-ish)
@@ -369,7 +371,16 @@ export default function App() {
     setIsScanning(true);
     try {
       const docs = await radarApi.scan(lat, lng, r, profileRef.current.id);
-      setNearbyDoctors(docs);
+      // Split live doctors vs persistent beacons: live ones replace the WS map
+      // (HTTP is a fallback), beacons are cached separately.
+      const live: DoctorProfile[] = [];
+      const beacons = new Map<string, DoctorProfile>();
+      for (const d of docs) {
+        if (d.isBeacon) beacons.set(d.id, d);
+        else live.push(d);
+      }
+      beaconsRef.current = beacons;
+      setNearbyDoctors(live);
     } catch (err) {
       console.warn('[PRTS] AMap JS API not loaded');
     } finally {
@@ -395,9 +406,31 @@ export default function App() {
       if (!f.scanGlobal && dist > radiusKm * 1000) continue;
       out.push({ ...doc, distance: dist });
     }
+    // Merge persistent beacons (offline discoverable users).
+    for (const b of beaconsRef.current.values()) {
+      if (b.id === p.id) continue;
+      const dist = calculateDistance(p.lat, p.lng, b.lat, b.lng);
+      if (!f.scanGlobal && dist > radiusKm * 1000) continue;
+      out.push({ ...b, distance: dist, isOnline: false });
+    }
     out.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     setNearbyDoctors(out);
   }, []);
+
+  // -----------------------------------------------------------------------
+  // Refresh only the beacon set (WS mode: live users stream over WS, beacons
+  // are persistent and fetched periodically / on location change).
+  // -----------------------------------------------------------------------
+  const refreshBeacons = useCallback(async (lat: number, lng: number) => {
+    const r = filterRef.current.scanGlobal ? GLOBAL_SCAN_SENTINEL : filterRef.current.radiusKm;
+    try {
+      const docs = await radarApi.scan(lat, lng, r, profileRef.current.id);
+      const beacons = new Map<string, DoctorProfile>();
+      for (const d of docs) if (d.isBeacon) beacons.set(d.id, d);
+      beaconsRef.current = beacons;
+      recomputeNearbyFromPresence();
+    } catch { /* ignore */ }
+  }, [recomputeNearbyFromPresence]);
 
   // -----------------------------------------------------------------------
   // Push my presence over WS (register + heartbeat on location change).
@@ -426,6 +459,8 @@ export default function App() {
   useEffect(() => {
     const sock = presenceSocketRef.current;
     if (sock && sock.isConnected()) recomputeNearbyFromPresence();
+    const p = profileRef.current;
+    if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) refreshBeacons(p.lat, p.lng);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, myProfile.lat, myProfile.lng, myProfile.id]);
 
@@ -461,6 +496,9 @@ export default function App() {
       if (connected) {
         pushPresence();
         lastWsPresenceAtRef.current = Date.now();
+        // Pull the persistent beacon set once on connect (live users stream via WS).
+        const p = profileRef.current;
+        if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) refreshBeacons(p.lat, p.lng);
       }
     });
 
@@ -472,7 +510,7 @@ export default function App() {
       sock.stop();
       presenceSocketRef.current = null;
     };
-  }, [pushPresence, recomputeNearbyFromPresence, handleInboxItems]);
+  }, [pushPresence, recomputeNearbyFromPresence, handleInboxItems, refreshBeacons]);
 
   // -----------------------------------------------------------------------
   // Manual refresh: report presence (ping) + rescan nearby doctors.
@@ -754,6 +792,37 @@ export default function App() {
   };
 
   // -----------------------------------------------------------------------
+  // Persistent beacon (常驻信标) — stay discoverable even when offline.
+  // -----------------------------------------------------------------------
+  const handlePlaceBeacon = useCallback(async (message = '') => {
+    const p = profileRef.current;
+    if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return false;
+    try {
+      await radarApi.placeBeacon(p, message);
+      // Refresh the beacon set so my own beacon disappears (excluded) locally.
+      await refreshBeacons(p.lat, p.lng);
+      prtsAudio.playRadarPing();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [refreshBeacons]);
+
+  const handleRemoveBeacon = useCallback(async () => {
+    const p = profileRef.current;
+    try {
+      await radarApi.removeBeacon(p.id);
+      beaconsRef.current.delete(p.id);
+      recomputeNearbyFromPresence();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [recomputeNearbyFromPresence]);
+
+  const hasActiveBeacon = useCallback(() => beaconsRef.current.has(profileRef.current.id), []);
+
+  // -----------------------------------------------------------------------
   // Interactions — local log + fire-and-forget API call
   // -----------------------------------------------------------------------
   const addLog = (type: string, fromName: string, fromAssistant: string, toId: string, msg: string): TacticalInteraction => {
@@ -936,6 +1005,9 @@ export default function App() {
           profile={myProfile}
           onSave={(updated) => { setMyProfile(updated); setIsProfileModalOpen(false); }}
           onClose={() => setIsProfileModalOpen(false)}
+          hasBeacon={hasActiveBeacon()}
+          onPlaceBeacon={handlePlaceBeacon}
+          onRemoveBeacon={handleRemoveBeacon}
         />
       )}
 

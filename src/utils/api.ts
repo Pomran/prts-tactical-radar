@@ -193,6 +193,8 @@ export function toDoctorProfile(d: any): DoctorProfile {
     receivedSanityCount: d.receivedSanityCount ?? 0,
     isOnline: d.isOnline ?? true,
     distance: d.distance ?? 0,
+    isBeacon: d.isBeacon ?? false,
+    beaconMessage: d.beaconMessage || undefined,
   } satisfies DoctorProfile;
 }
 
@@ -322,5 +324,19 @@ export const radarApi = {
         new Blob([payload], { type: 'application/json' }),
       );
     } catch { /* ignore */ }
+  },
+
+  /** Place/refresh a persistent beacon at my current location (offline discoverable). */
+  async placeBeacon(profile: DoctorProfile, message = ''): Promise<void> {
+    const payload = { ...buildPresencePayload(profile), message };
+    await jfetch('/api/radar/beacon', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /** Remove my persistent beacon. */
+  async removeBeacon(id: string): Promise<void> {
+    await jfetch(`/api/radar/beacon?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
   },
 };

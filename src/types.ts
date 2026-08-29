@@ -79,6 +79,10 @@ export interface DoctorProfile {
   receivedSanityCount: number;
   isOnline: boolean;
   distance?: number; // In meters, computed at runtime
+  /** Persistent beacon (常驻信标) — offline but discoverable. */
+  isBeacon?: boolean;
+  /** Beacon message left by an offline doctor. */
+  beaconMessage?: string;
 }
 
 export interface RadarFilter {

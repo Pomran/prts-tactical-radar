@@ -13,6 +13,7 @@
  */
 import { Env } from './env';
 import { PresenceCoordinator } from './presence';
+import { sanitizeBeacon, putBeacon, removeBeacon, queryBeacons, refreshBeaconOnOnline } from './beacon';
 
 export { PresenceCoordinator };
 
@@ -130,6 +131,9 @@ async function handlePing(request: Request, env: Env): Promise<Response> {
   await res.arrayBuffer(); // drain
   if (!res.ok) return json({ ok: false, error: 'presence failed' }, 502);
 
+  // Coming online refreshes an existing beacon's TTL (active users stay visible).
+  await refreshBeaconOnOnline(env.DB, id);
+
   return json({ ok: true, geohash: geohashEncode(lat, lng, PRECISION) });
 }
 
@@ -154,11 +158,18 @@ async function handleScan(request: Request, env: Env): Promise<Response> {
   );
   const data: any = await res.json().catch(() => ({ ok: false }));
 
+  // Merge persistent beacons (offline discoverable users) with live presence.
+  const beacons = await queryBeacons(env.DB, lat, lng, radiusKm, excludeId, globalMode);
+
+  const doctors = [...(Array.isArray(data?.doctors) ? data.doctors : []), ...beacons];
+  doctors.sort((a: any, b: any) => (a.distance ?? 0) - (b.distance ?? 0));
+
   return json({
     ok: true,
-    doctors: Array.isArray(data?.doctors) ? data.doctors : [],
+    doctors: doctors.slice(0, 120),
     scan_cache: data?.scan_cache || 'ws',
     scan_cells: data?.scan_cells ?? 0,
+    beacon_count: beacons.length,
   });
 }
 
@@ -215,6 +226,29 @@ async function handleOffline(request: Request, env: Env): Promise<Response> {
     body: JSON.stringify({ id }),
   });
   await res.arrayBuffer(); // drain
+  return json({ ok: true });
+}
+
+// ---------------------------------------------------------------------------
+// Persistent beacons (常驻信标) — offline users stay discoverable + interactable
+// ---------------------------------------------------------------------------
+async function handleBeaconPut(request: Request, env: Env): Promise<Response> {
+  let body: any;
+  try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+
+  const parsed = sanitizeBeacon(body);
+  if (!parsed) return json({ error: 'Invalid beacon payload' }, 400);
+
+  const ok = await putBeacon(env.DB, parsed.doc, parsed.lat, parsed.lng, parsed.message);
+  if (!ok) return json({ error: 'Failed to store beacon' }, 502);
+  return json({ ok: true });
+}
+
+async function handleBeaconDelete(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const id = url.searchParams.get('id') || '';
+  if (!id) return json({ error: 'Missing id' }, 400);
+  await removeBeacon(env.DB, id);
   return json({ ok: true });
 }
 
@@ -362,7 +396,9 @@ export default {
       const isWriteEndpoint =
         (url.pathname === '/api/radar/ping' && request.method === 'POST') ||
         (url.pathname === '/api/radar/interact' && request.method === 'POST') ||
-        (url.pathname === '/api/radar/offline' && request.method === 'POST');
+        (url.pathname === '/api/radar/offline' && request.method === 'POST') ||
+        (url.pathname === '/api/radar/beacon' && request.method === 'POST') ||
+        (url.pathname === '/api/radar/beacon' && request.method === 'DELETE');
       if (isWriteEndpoint && !rateLimit(`w:${clientKey(request)}`, 10, 10)) {
         return json({ error: 'Too many requests, slow down' }, 429);
       }
@@ -381,6 +417,12 @@ export default {
         }
         if (url.pathname === '/api/radar/offline' && request.method === 'POST') {
           return await handleOffline(request, env);
+        }
+        if (url.pathname === '/api/radar/beacon' && request.method === 'POST') {
+          return await handleBeaconPut(request, env);
+        }
+        if (url.pathname === '/api/radar/beacon' && request.method === 'DELETE') {
+          return await handleBeaconDelete(request, env);
         }
         if (url.pathname === '/api/radar/geoip' && request.method === 'GET') {
           return await handleGeoIP(request, env);
