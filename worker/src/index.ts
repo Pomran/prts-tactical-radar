@@ -17,6 +17,8 @@ export interface Env {
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+import { Presence, getBucket, scanNearby } from './radar/scan';
+
 interface WireOperator {
   opId?: string;
   dataUrl?: string;
@@ -31,30 +33,6 @@ interface WireSupport {
   level: number;
   elite: number;
   skillLevel: string;
-}
-
-interface Presence {
-  id: string;
-  name: string;
-  title: string;
-  level: number;
-  uid: string;
-  server: string;
-  assistant: WireOperator;
-  supportOperators: WireSupport[];
-  motto: string;
-  wantedClues: number[];
-  extraClues: number[];
-  lat: number;
-  lng: number;
-  isCamouflaged: boolean;
-  offsetRadiusMeters: number;
-  beaconBroadcastRadiusKm: number;
-  /** 'all' = visible to everyone (default); 'radius' = only within broadcast radius */
-  broadcastVisibility: 'all' | 'radius';
-  lastActive: number;
-  receivedSanityCount: number;
-  isOnline: boolean;
 }
 
 interface InboxItem {
@@ -134,17 +112,7 @@ function geohashNeighbors(hash: string): string[] {
 // ---------------------------------------------------------------------------
 // Math helpers
 // ---------------------------------------------------------------------------
-const EARTH_R = 6371e3;
 function toRad(d: number) { return (d * Math.PI) / 180; }
-
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return Math.round(EARTH_R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-}
 
 function num(v: unknown, min: number, max: number, fallback: number): number {
   const n = Number(v);
@@ -173,15 +141,10 @@ const INBOX_TTL = 86400; // 24 hours
 const PRECISION = 5; // geohash precision (~5km cells)
 const MAX_BUCKET_DOCS = 200;
 const MAX_INBOX = 50;
-const MAX_RESPONSE = 120;
 
 // ---------------------------------------------------------------------------
 // KV bucket helpers
 // ---------------------------------------------------------------------------
-async function getBucket(kv: KVNamespace, hash: string): Promise<Presence[]> {
-  return (await kv.get<Presence[]>(`p:${hash}`, 'json')) || [];
-}
-
 async function putBucket(kv: KVNamespace, hash: string, docs: Presence[]): Promise<void> {
   const pruned = docs
     .filter((d) => Date.now() - d.lastActive < PRESENCE_TTL * 1000)
@@ -286,66 +249,36 @@ async function handleScan(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const lat = num(url.searchParams.get('lat'), -85, 85, 0);
   const lng = num(url.searchParams.get('lng'), -180, 180, 0);
-  const radiusKm = num(url.searchParams.get('radius'), 0.1, 100, 5);
+  const radiusRaw = url.searchParams.get('radius');
   const excludeId = url.searchParams.get('exclude') || '';
 
   if (!lat && !lng) return json({ error: 'Missing coordinates' }, 400);
 
-  // Determine which geohash precision to use based on radius
-  const useCoarse = radiusKm > 8;
-  const prefix = useCoarse ? 'c:' : '';
-  const precision = useCoarse ? 4 : PRECISION;
+  // 全域模式：前端对「探测半径=全域」传一个超大哨兵半径(>=10000)，
+  // 此时返回广域格内所有符合条件的在线博士，不再按距离截断。
+  const globalMode = (() => {
+    if (radiusRaw === 'all' || radiusRaw === 'global') return true;
+    const n = Number(radiusRaw);
+    return Number.isFinite(n) && n >= 10000;
+  })();
 
-  // Compute bounding box in lat/lng
-  const latDelta = (radiusKm / 111) * 1.2;
-  const cosLat = Math.max(0.2, Math.cos(toRad(lat)));
-  const lngDelta = (radiusKm / (111 * cosLat)) * 1.2;
+  const radiusKm = globalMode ? 100 : num(radiusRaw, 0.1, 100, 5);
 
-  // Get geohash cells covering the bounding box
-  const corners = [
-    geohashEncode(lat - latDelta, lng - lngDelta, precision),
-    geohashEncode(lat - latDelta, lng + lngDelta, precision),
-    geohashEncode(lat + latDelta, lng - lngDelta, precision),
-    geohashEncode(lat + latDelta, lng + lngDelta, precision),
-    geohashEncode(lat, lng, precision),
-  ];
+  const { doctors, scanCache, scannedCells } = await scanNearby(
+    env.RADAR_KV,
+    lat,
+    lng,
+    radiusKm,
+    globalMode,
+    excludeId,
+  );
 
-  // Collect all unique geohash cells (center + neighbors of each corner + center)
-  const cellSet = new Set<string>();
-  for (const h of corners) {
-    cellSet.add(h);
-    for (const n of geohashNeighbors(h)) cellSet.add(n);
-  }
-
-  const cells = [...cellSet].slice(0, 49); // cap at 7x7 grid
-  const keys = cells.map((h) => `${prefix}${h}`);
-
-  // Parallel fetch from KV
-  const buckets = await Promise.all(keys.map((k) => getBucket(env.RADAR_KV, k)));
-
-  const seen = new Set<string>();
-  const now = Date.now();
-  const results: (Presence & { distance: number })[] = [];
-
-  for (const bucket of buckets) {
-    if (!Array.isArray(bucket)) continue;
-    for (const doc of bucket) {
-      if (seen.has(doc.id) || doc.id === excludeId) continue;
-      if (now - doc.lastActive > PRESENCE_TTL * 1000) continue;
-      seen.add(doc.id);
-
-      const dist = haversineMeters(lat, lng, doc.lat, doc.lng);
-      if (dist > radiusKm * 1000) continue;
-      // 'all' visibility → visible to everyone within the scan radius.
-      // 'radius' visibility → additionally limited by the doctor's own broadcast radius.
-      if (doc.broadcastVisibility !== 'all' && dist > (doc.beaconBroadcastRadiusKm || 5) * 1000) continue;
-
-      results.push({ ...doc, distance: dist });
-    }
-  }
-
-  results.sort((a, b) => a.distance - b.distance);
-  return json({ ok: true, doctors: results.slice(0, MAX_RESPONSE) });
+  return json({
+    ok: true,
+    doctors,
+    scan_cache: scanCache,
+    scan_cells: scannedCells,
+  });
 }
 
 async function handleInteract(request: Request, env: Env): Promise<Response> {

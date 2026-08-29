@@ -9,8 +9,12 @@ import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
 import { DoctorProfile, RadarFilter, TacticalInteraction } from './types';
 import { OPERATOR_DATABASE } from './data/operators';
 import { TACTICAL_HOTSPOTS, applyJitter, wgs84ToGcj02 } from './utils/geoutils';
+import { getRadarCellSignature } from '@/shared/radarSpatial';
 import { prtsAudio } from './utils/audio';
 import { radarApi, getDeviceId, loadProfileSettings, saveProfileSettings, loadFilterSettings, saveFilterSettings } from './utils/api';
+
+// 全域扫描哨兵半径：默认探测半径即为「全域」，向后端传一个超大的哨兵值以返回广域所有在线博士。
+export const GLOBAL_SCAN_SENTINEL = 10000;
 
 // ---------------------------------------------------------------------------
 // IP Geolocation via Worker (uses Cloudflare's built-in request.cf geo data)
@@ -256,6 +260,7 @@ export default function App() {
   const [filter, setFilter] = useState<RadarFilter>(() => {
     const defaults: RadarFilter = {
       radiusKm: 5,
+      scanGlobal: true,
       server: 'ALL',
       minLevel: 0,
       onlyOnline: false,
@@ -278,6 +283,10 @@ export default function App() {
   profileRef.current = myProfile;
   const filterRef = useRef(filter);
   filterRef.current = filter;
+  // Cache the last successful scan's spatial cell signature for client-side dedup.
+  const lastScanSigRef = useRef<string>('');
+  // P3: last time the user sent an interaction — drives a temporary faster inbox poll.
+  const lastInteractAtRef = useRef<number>(0);
 
   // -----------------------------------------------------------------------
   // Persist user settings to localStorage whenever they change (debounced-ish)
@@ -321,10 +330,18 @@ export default function App() {
   // -----------------------------------------------------------------------
   // Scan nearby doctors via real API
   // -----------------------------------------------------------------------
-  const refreshNearby = useCallback(async (lat: number, lng: number, radiusKm?: number) => {
+  const refreshNearby = useCallback(async (lat: number, lng: number, force = false) => {
+    // 全域扫描时向后端传一个极大的哨兵半径，用于返回广域内的所有在线博士
+    const r = filterRef.current.scanGlobal ? GLOBAL_SCAN_SENTINEL : filterRef.current.radiusKm;
+
+    // P1 去重：同一空间 cell 集的重复 scan（如 GPS 抖动）不再发请求。
+    const sig = getRadarCellSignature(lat, lng, r);
+    if (!force && sig === lastScanSigRef.current) return;
+    lastScanSigRef.current = sig;
+
     setIsScanning(true);
     try {
-      const docs = await radarApi.scan(lat, lng, radiusKm ?? filterRef.current.radiusKm, profileRef.current.id);
+      const docs = await radarApi.scan(lat, lng, r, profileRef.current.id);
       setNearbyDoctors(docs);
     } catch (err) {
       console.warn('[PRTS] AMap JS API not loaded');
@@ -335,12 +352,27 @@ export default function App() {
 
   // -----------------------------------------------------------------------
   // Manual refresh: report presence (ping) + rescan nearby doctors.
-  // Only happens when the user clicks the sonar refresh button.
+  // Only happens when the user clicks the sonar refresh button. Force bypasses
+  // the P1 dedup so the user always gets a fresh scan.
   // -----------------------------------------------------------------------
   const handleManualRefresh = useCallback(() => {
     const p = profileRef.current;
     radarApi.ping({ ...p, lat: p.lat, lng: p.lng }).catch(() => {});
-    return refreshNearby(p.lat, p.lng);
+    return refreshNearby(p.lat, p.lng, true);
+  }, [refreshNearby]);
+
+  // -----------------------------------------------------------------------
+  // P1: rescan (forced) when the app returns to the foreground, so data is
+  // fresh after the tab was backgrounded without letting GPS jitter spam scans.
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      const p = profileRef.current;
+      if (Number.isFinite(p.lat) && Number.isFinite(p.lng)) refreshNearby(p.lat, p.lng, true);
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [refreshNearby]);
 
   // -----------------------------------------------------------------------
@@ -353,10 +385,16 @@ export default function App() {
   }, []);
 
   // -----------------------------------------------------------------------
-  // Inbox poll: fetch incoming interactions every 15s
+  // Inbox poll (P3 adaptive): fetch incoming interactions.
+  //  - hidden tab → stop polling
+  //  - visible + idle → every 30s
+  //  - visible + recently interacted (boost window) → every 15s
+  //  - returning to foreground → immediate poll
   // -----------------------------------------------------------------------
   useEffect(() => {
     let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
     const poll = async () => {
       try {
         const items = await radarApi.inbox(profileRef.current.id);
@@ -378,8 +416,33 @@ export default function App() {
         }
       } catch { /* ignore */ }
     };
-    const t = setInterval(poll, 15000);
-    return () => { stopped = true; clearInterval(t); };
+
+    const step = async () => {
+      await poll();
+      if (stopped) return;
+      if (document.visibilityState !== 'visible') return; // hidden → stop scheduling
+      const recentlyActive = Date.now() - lastInteractAtRef.current < 60_000;
+      timer = setTimeout(step, recentlyActive ? 15000 : 30000);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        if (timer) { clearTimeout(timer); timer = null; }
+        step();
+      } else if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    if (document.visibilityState === 'visible') step();
+
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   // -----------------------------------------------------------------------
@@ -594,6 +657,7 @@ export default function App() {
     );
         const msg = `向 ${doc.name} 投递了一瓶【应急理智顶剂】(+10 Sanity)，对方理智已补给！`;
     addLog('SANITY', myProfile.name, myProfile.assistant.cnName, doc.id, msg);
+    lastInteractAtRef.current = Date.now();
     radarApi.interact({
       type: 'SANITY',
       fromDoctorId: myProfile.id,
@@ -608,6 +672,7 @@ export default function App() {
     const code = `PRTS-${Math.floor(1000 + Math.random() * 9000)}-EX`;
         const msg = `已向 ${doc.name} 发起【${drillType}】组队邀请！演练作战识别码：${code}`;
     addLog('INVITE', myProfile.name, myProfile.assistant.cnName, doc.id, msg);
+    lastInteractAtRef.current = Date.now();
     radarApi.interact({
       type: 'INVITE',
       fromDoctorId: myProfile.id,
@@ -622,6 +687,7 @@ export default function App() {
   const handleSendClue = (doc: DoctorProfile, clueNum: number) => {
         const msg = `已将【线索 ${clueNum}】投递至 ${doc.name} 的罗德岛会客室！`;
     addLog('CLUE', myProfile.name, myProfile.assistant.cnName, doc.id, msg);
+    lastInteractAtRef.current = Date.now();
     radarApi.interact({
       type: 'CLUE',
       fromDoctorId: myProfile.id,
@@ -636,6 +702,7 @@ export default function App() {
   const handleSendMessage = (doc: DoctorProfile, msg: string) => {
         const logMsg = `战术密话 ➔ ${doc.name}：“${msg}”`;
     addLog('PING', myProfile.name, myProfile.assistant.cnName, doc.id, logMsg);
+    lastInteractAtRef.current = Date.now();
     radarApi.interact({
       type: 'PING',
       fromDoctorId: myProfile.id,

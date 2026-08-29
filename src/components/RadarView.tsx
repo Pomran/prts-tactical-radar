@@ -138,20 +138,22 @@ export const RadarView: React.FC<RadarViewProps> = ({
     // Pan smoothly to player location
     map.setView([myLat, myLng], map.getZoom(), { animate: true });
 
-    // Update Radar Radius Range Circle
+    // Update Radar Radius Range Circle (全域时无半径边界,不绘制)
     if (radarCircleRef.current) {
       radarCircleRef.current.remove();
+      radarCircleRef.current = null;
     }
-
-    radarCircleRef.current = L.circle([myLat, myLng], {
-      radius: filter.radiusKm * 1000,
-      color: '#00e5ff',
-      weight: 1.5,
-      opacity: 0.6,
-      fillColor: '#00e5ff',
-      fillOpacity: 0.03,
-      dashArray: '6, 6',
-    }).addTo(map);
+    if (!filter.scanGlobal) {
+      radarCircleRef.current = L.circle([myLat, myLng], {
+        radius: filter.radiusKm * 1000,
+        color: '#00e5ff',
+        weight: 1.5,
+        opacity: 0.6,
+        fillColor: '#00e5ff',
+        fillOpacity: 0.03,
+        dashArray: '6, 6',
+      }).addTo(map);
+    }
 
     // Update Beacon Broadcast Range Circle (本人可被识别范围)
     if (broadcastCircleRef.current) {
@@ -362,7 +364,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
         markersGroupRef.current.addLayer(docMarker);
       });
     }
-  }, [nearbyDoctors, myProfile, filter.radiusKm, activeRadius, broadcastRadiusKm]);
+  }, [nearbyDoctors, myProfile, filter.radiusKm, filter.scanGlobal, activeRadius, broadcastRadiusKm]);
 
   // Copy UID function
   const handleCopyUid = (uid: string) => {
@@ -399,7 +401,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
               <div className="text-[10px] text-slate-400">PRTS SONAR RADAR</div>
               <div className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span>探测半径:</span>
-                <span className="text-[#00e5ff]">{myProfile.broadcastVisibility === 'all' ? '全域' : `${filter.radiusKm} KM`}</span>
+                <span className="text-[#00e5ff]">{filter.scanGlobal ? '全域' : `${filter.radiusKm} KM`}</span>
                 <span className="text-slate-600">|</span>
                 <span>目标:</span>
                 <span className="text-[#ffde00] font-bold">{nearbyDoctors.length} 博士</span>
@@ -766,24 +768,37 @@ export const RadarView: React.FC<RadarViewProps> = ({
             </button>
           </div>
 
-          {/* Radius Selector with Slider & Input */}
+          {/* 探测半径（扫描范围）Selector with Slider & Input — 独立全域开关 */}
           <div className="mb-3 bg-[#111925] p-2.5 rounded border border-slate-800 space-y-2">
-            <div className="flex justify-between items-center text-[11px]">
-              <span className="text-slate-400">探测扫描范围:</span>
-              <div className="flex items-center gap-1 bg-[#0a0f16] px-2 py-0.5 rounded border border-[#00e5ff]/40">
-                <input
-                  type="number"
-                  min={0.5}
-                  max={50}
-                  step={0.5}
-                  value={filter.radiusKm}
-                  onChange={(e) => {
-                    const val = Math.max(0.5, Math.min(50, Number(e.target.value) || 0.5));
-                    setFilter((prev) => ({ ...prev, radiusKm: val }));
-                  }}
-                  className="w-12 bg-transparent text-[#00e5ff] font-bold text-xs text-right outline-none"
-                />
-                <span className="text-[11px] text-[#00e5ff] font-bold">KM</span>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-slate-300 text-[11px] font-bold">探测半径 (扫描范围):</div>
+                <div className="text-[9px] text-slate-500 mt-0.5">
+                  {filter.scanGlobal
+                    ? '全域扫描:雷达探查所有在线博士讯号'
+                    : '按设定距离扫描附近博士讯号'}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 bg-[#0a0f16] px-2 py-1 rounded border border-[#00e5ff]/40">
+                {filter.scanGlobal ? (
+                  <span className="text-[#00e5ff] font-bold text-xs">全域</span>
+                ) : (
+                  <>
+                    <input
+                      type="number"
+                      min={0.5}
+                      max={50}
+                      step={0.5}
+                      value={filter.radiusKm}
+                      onChange={(e) => {
+                        const val = Math.max(0.5, Math.min(50, Number(e.target.value) || 0.5));
+                        setFilter((prev) => ({ ...prev, radiusKm: val }));
+                      }}
+                      className="w-12 bg-transparent text-[#00e5ff] font-bold text-xs text-right outline-none"
+                    />
+                    <span className="text-[11px] text-[#00e5ff] font-bold">KM</span>
+                  </>
+                )}
               </div>
             </div>
 
@@ -796,7 +811,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
               onChange={(e) => {
                 setFilter((prev) => ({ ...prev, radiusKm: Number(e.target.value) }));
               }}
-              className="w-full accent-[#00e5ff] cursor-pointer"
+              className={`w-full accent-[#00e5ff] cursor-pointer ${filter.scanGlobal ? 'opacity-40 pointer-events-none' : ''}`}
             />
 
             <div className="flex justify-between text-[9px] text-slate-500 font-mono">
@@ -804,6 +819,39 @@ export const RadarView: React.FC<RadarViewProps> = ({
               <span>5.0 km (标配)</span>
               <span>30.0 km (广域)</span>
             </div>
+
+            {/* 探测半径全域开关 — 与广播半径独立 */}
+            <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-800">
+              <button
+                onClick={() => {
+                  prtsAudio.playClick();
+                  setFilter((prev) => ({ ...prev, scanGlobal: true }));
+                }}
+                className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                  filter.scanGlobal
+                    ? 'bg-[#00e5ff]/25 text-[#00e5ff] border-[#00e5ff]'
+                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                }`}
+              >
+                全域 (默认)
+              </button>
+              <button
+                onClick={() => {
+                  prtsAudio.playClick();
+                  setFilter((prev) => ({ ...prev, scanGlobal: false }));
+                }}
+                className={`px-2 py-1.5 rounded text-[10px] font-bold border transition-all ${
+                  !filter.scanGlobal
+                    ? 'bg-[#ffde00]/25 text-[#ffde00] border-[#ffde00]'
+                    : 'bg-slate-800/50 text-slate-400 border-slate-700 hover:text-slate-200'
+                }`}
+              >
+                按半径扫描
+              </button>
+            </div>
+            <p className="text-[9px] text-slate-500 leading-relaxed">
+              探测半径独立于信标广播。全域 = 雷达探查所有在线博士;按半径 = 仅扫描设定公里范围内的讯号。
+            </p>
           </div>
 
           {/* Server Filter */}

@@ -83,6 +83,8 @@ export interface DoctorProfile {
 
 export interface RadarFilter {
   radiusKm: number;
+  /** 探测半径全域开关（默认开启）。true = 全域扫描，不受公里数限制；false = 按 radiusKm 范围扫描 */
+  scanGlobal: boolean;
   server: ServerRegion | 'ALL';
   minLevel: number;
   onlyOnline: boolean;
