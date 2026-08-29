@@ -43,6 +43,22 @@ jobs:
             "kv_namespaces": [
               { "binding": "RADAR_KV", "id": "${{ secrets.CF_KV_NAMESPACE_ID }}" }
             ],
+            "durable_objects": {
+              "bindings": [
+                { "name": "PRESENCE", "class_name": "PresenceCoordinator" }
+              ]
+            },
+            "migrations": [
+              { "tag": "v1", "new_sqlite_classes": ["PresenceCoordinator"] }
+            ],
+            "d1_databases": [
+              {
+                "binding": "DB",
+                "database_name": "${{ vars.CF_D1_DATABASE_NAME }}",
+                "database_id": "${{ secrets.CF_D1_DATABASE_ID }}",
+                "migrations_dir": "./migrations"
+              }
+            ],
             "assets": { "directory": "./dist" },
             "vars": { "GAODE_KEY": "${{ secrets.GAODE_KEY }}" }
           }
