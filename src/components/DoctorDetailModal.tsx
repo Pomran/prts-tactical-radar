@@ -257,6 +257,18 @@ export const DoctorDetailModal: React.FC<DoctorDetailModalProps> = ({
                     )}
                   </div>
                 </div>
+
+                {/* Persistent Beacon Message (常驻信标留言) */}
+                {doctor.isBeacon && (
+                  <div className="bg-[#2a2208]/40 border border-[#ffde00]/40 rounded p-2.5">
+                    <div className="flex items-center gap-1.5 text-xs text-[#ffde00] font-bold mb-1">
+                      <Radio size={13} /> 常驻信标 · 当前离线
+                    </div>
+                    <p className="text-[11px] text-[#ffde00]/90 leading-relaxed">
+                      {doctor.beaconMessage || '这位博士在此留下了常驻信标。可向 TA 发送互动，上线后实时接收。'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Clues Wanted and Surplus */}

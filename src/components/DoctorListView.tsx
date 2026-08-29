@@ -130,7 +130,7 @@ export const DoctorListView: React.FC<DoctorListViewProps> = ({
                       <span className="text-[10px] text-[#ffde00] font-bold">
                         {doc.distance ? (doc.distance < 1000 ? `${doc.distance}m` : `${(doc.distance/1000).toFixed(1)}km`) : '附近'}
                       </span>
-                      <span className={`w-2 h-2 rounded-full ${doc.isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`}></span>
+                      <span className={`w-2 h-2 rounded-full ${doc.isOnline ? 'bg-emerald-400 animate-pulse' : doc.isBeacon ? 'bg-[#ffde00] animate-pulse' : 'bg-slate-600'}`}></span>
                     </div>
                   </div>
 
@@ -161,6 +161,14 @@ export const DoctorListView: React.FC<DoctorListViewProps> = ({
                   <div className="bg-[#070b12] p-2 rounded border-l-2 border-[#ffde00] text-[11px] text-slate-300 italic mb-3 line-clamp-2 min-h-[38px]">
                     {doc.motto}
                   </div>
+
+                  {/* Persistent Beacon Message (常驻信标留言) */}
+                  {doc.isBeacon && (
+                    <div className="mb-3 p-2 bg-[#2a2208]/40 border border-[#ffde00]/40 rounded text-[11px] text-[#ffde00] leading-relaxed flex items-start gap-1.5">
+                      <span className="text-sm flex-shrink-0">📡</span>
+                      <span className="line-clamp-2">{doc.beaconMessage || '常驻信标 · 当前离线，可发送互动'}</span>
+                    </div>
+                  )}
 
                   {/* Support units badges */}
                   <div className="mb-3">
