@@ -359,41 +359,10 @@ export default function App() {
   }, []);
 
   // -----------------------------------------------------------------------
-  // Scan nearby doctors via real API (HTTP fallback) — primary is the WS.
-  // -----------------------------------------------------------------------
-  const refreshNearby = useCallback(async (lat: number, lng: number, force = false) => {
-    // 全域扫描时向后端传一个极大的哨兵半径，用于返回广域内的所有在线博士
-    const r = filterRef.current.scanGlobal ? GLOBAL_SCAN_SENTINEL : filterRef.current.radiusKm;
-
-    // P1 去重：同一空间 cell 集的重复 scan（如 GPS 抖动）不再发请求。
-    const sig = getRadarCellSignature(lat, lng, r);
-    if (!force && sig === lastScanSigRef.current) return;
-    lastScanSigRef.current = sig;
-
-    setIsScanning(true);
-    try {
-      const docs = await radarApi.scan(lat, lng, r, profileRef.current.id);
-      // Split live doctors vs persistent beacons: live ones replace the WS map
-      // (HTTP is a fallback), beacons are cached separately.
-      const live: DoctorProfile[] = [];
-      const beacons = new Map<string, DoctorProfile>();
-      for (const d of docs) {
-        if (d.isBeacon) beacons.set(d.id, d);
-        else live.push(d);
-      }
-      beaconsRef.current = beacons;
-      setNearbyDoctors(live);
-    } catch (err) {
-      console.warn('[PRTS] AMap JS API not loaded');
-    } finally {
-      setIsScanning(false);
-    }
-  }, []);
-
-  // -----------------------------------------------------------------------
   // Recompute the visible radar list from the WS presence map (Level 1).
   // The server already pushed ONLY doctors I'm allowed to see (privacy gate),
-  // so this is a pure client-side radius/filter/sort.
+  // so this is a pure client-side radius/filter/sort. Merges live WS users
+  // (visibleUsersRef) + persistent beacons (beaconsRef).
   // -----------------------------------------------------------------------
   const recomputeNearbyFromPresence = useCallback(() => {
     const p = profileRef.current;
@@ -418,6 +387,41 @@ export default function App() {
     out.sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
     setNearbyDoctors(out);
   }, []);
+
+  // -----------------------------------------------------------------------
+  // Scan nearby doctors via real API (HTTP fallback) — primary is the WS.
+  // Results are folded into the same refs the WS path uses, then recomputed,
+  // so manual refresh and WS deltas share one source of truth (no race).
+  // -----------------------------------------------------------------------
+  const refreshNearby = useCallback(async (lat: number, lng: number, force = false) => {
+    // 全域扫描时向后端传一个极大的哨兵半径，用于返回广域内的所有在线博士
+    const r = filterRef.current.scanGlobal ? GLOBAL_SCAN_SENTINEL : filterRef.current.radiusKm;
+
+    // P1 去重：同一空间 cell 集的重复 scan（如 GPS 抖动）不再发请求。
+    const sig = getRadarCellSignature(lat, lng, r);
+    if (!force && sig === lastScanSigRef.current) return;
+    lastScanSigRef.current = sig;
+
+    setIsScanning(true);
+    try {
+      // Worker 的 /scan 已把信标合并进 doctors（含 isBeacon 标记）。
+      const docs = await radarApi.scan(lat, lng, r, profileRef.current.id);
+      // 在线用户 → visibleUsersRef；信标 → beaconsRef；统一 recompute 展示。
+      const nextLive = new Map(visibleUsersRef.current);
+      const beacons = new Map<string, DoctorProfile>();
+      for (const d of docs) {
+        if (d.isBeacon) beacons.set(d.id, d);
+        else nextLive.set(d.id, d);
+      }
+      visibleUsersRef.current = nextLive;
+      beaconsRef.current = beacons;
+      recomputeNearbyFromPresence();
+    } catch (err) {
+      console.warn('[PRTS] AMap JS API not loaded');
+    } finally {
+      setIsScanning(false);
+    }
+  }, [recomputeNearbyFromPresence]);
 
   // -----------------------------------------------------------------------
   // Refresh only the beacon set (WS mode: live users stream over WS, beacons
