@@ -29,7 +29,13 @@ export type Faction =
   | 'Higashi'
   | 'Minos'
   | 'Yan'
-  | 'Leithanien';
+  | 'Leithanien'
+  | 'Rim Billiton'
+  | 'Bolivar'
+  | 'Babel'
+  | 'Columbia'
+  | 'Aegir'
+  | 'Siesta';
 
 export interface Operator {
   id: string;
