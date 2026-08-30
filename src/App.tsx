@@ -919,7 +919,7 @@ export default function App() {
       toDoctorId: doc.id,
       message: logMsg,
     });
-      alert('定位失败，请检查网络后重试');
+    alert(`战术密话已发送至 ${doc.name}！`);
   };
 
   // -----------------------------------------------------------------------
