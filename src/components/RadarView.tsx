@@ -72,7 +72,6 @@ export const RadarView: React.FC<RadarViewProps> = ({
   const accuracyCircleRef = useRef<L.Circle | null>(null);
   const broadcastCircleRef = useRef<L.Circle | null>(null);
 
-  const [copiedUid, setCopiedUid] = useState<string | null>(null);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showOffsetPanel, setShowOffsetPanel] = useState(false);
   const [showBroadcastPanel, setShowBroadcastPanel] = useState(false);
@@ -316,6 +315,11 @@ export const RadarView: React.FC<RadarViewProps> = ({
             <span class="text-[9px] text-amber-300 font-mono">${esc(doc.server)}</span>
           </div>
 
+          <div id="popup-uid-${doc.id}" class="flex items-center justify-between text-[9px] text-slate-400 mb-2 -mt-0.5 cursor-pointer select-none rounded px-1 py-0.5 hover:bg-slate-800/60 transition-colors" title="点击复制 UID">
+            <span>UID: <b class="text-slate-200 font-mono">${esc(doc.uid)}</b></span>
+            <span id="popup-uid-feedback-${doc.id}" class="text-emerald-400 font-bold text-[10px]">📋</span>
+          </div>
+
           <div class="flex items-center gap-2 mb-2 bg-[#121c2b] p-1.5 rounded border border-slate-800">
             <img src="${esc(doc.assistant.avatar)}" class="w-8 h-8 rounded-full border border-[${safeColor(doc.assistant.color)}]" />
             <div class="text-[10px] leading-tight">
@@ -356,6 +360,20 @@ export const RadarView: React.FC<RadarViewProps> = ({
         docMarker.on('popupopen', () => {
           const sanityBtn = document.getElementById(`popup-sanity-${doc.id}`);
           const dossierBtn = document.getElementById(`popup-dossier-${doc.id}`);
+          const uidRow = document.getElementById(`popup-uid-${doc.id}`);
+
+          if (uidRow) {
+            uidRow.onclick = (e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(doc.uid).catch(() => {});
+              prtsAudio.playClick();
+              const fb = document.getElementById(`popup-uid-feedback-${doc.id}`);
+              if (fb) {
+                fb.textContent = '✓ 已复制';
+                setTimeout(() => { fb.textContent = '📋'; }, 1800);
+              }
+            };
+          }
 
           if (sanityBtn) {
             sanityBtn.onclick = (e) => {
@@ -376,14 +394,6 @@ export const RadarView: React.FC<RadarViewProps> = ({
       });
     }
   }, [nearbyDoctors, myProfile, filter.radiusKm, filter.scanGlobal, activeRadius, broadcastRadiusKm]);
-
-  // Copy UID function
-  const handleCopyUid = (uid: string) => {
-    navigator.clipboard.writeText(uid);
-    setCopiedUid(uid);
-    prtsAudio.playClick();
-    setTimeout(() => setCopiedUid(null), 2000);
-  };
 
   // Center on player
   const handleLocateSelf = () => {
