@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   ExternalLink, 
@@ -79,10 +80,10 @@ export const FriendLinksModal: React.FC<FriendLinksModalProps> = ({ isOpen, onCl
     }
   };
 
-  return (
+  return createPortal(
     <div 
       id="friend-links-modal-overlay"
-      className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
       <div 
@@ -374,6 +375,7 @@ export const FriendLinksModal: React.FC<FriendLinksModalProps> = ({ isOpen, onCl
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
