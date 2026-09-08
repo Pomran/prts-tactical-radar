@@ -119,7 +119,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     tags: ['蹲饼必备', '全网情报源', '即时推送'],
     description: '专注于明日方舟官方多平台动态实时推送与蹲饼工具，监控鹰角全网30+官方发布源。',
     url: 'https://ceobecanteen.top',
-    githubUrl: 'https://github.com/Ceobe-Canteen',
+    githubUrl: 'https://github.com/Ceobe/ceobe.github.io',
     iconUrl: 'https://ceobecanteen.top/favicon.ico',
     themeColor: '#f97316',
     badge: '蹲饼神器',
@@ -137,20 +137,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://tomimi.dev/favicon.ico',
     themeColor: '#14b8a6'
   },
-  // 9. 明日方舟工具箱
-  {
-    id: 'ak-toolbox',
-    name: '明日方舟工具箱',
-    category: 'TOOLS_ASSISTANT',
-    categoryLabel: '效率与辅助',
-    tags: ['公开招募', '材料合成', '基建速查'],
-    description: '经典的公开招募标签组合计算器、精英化材料合成树规划与全干员基建技能加成速查。',
-    url: 'https://ak.graueneko.xyz',
-    mirrorUrl: 'https://tools.arknights.fun',
-    iconUrl: 'https://ak.graueneko.xyz/favicon.ico',
-    themeColor: '#8b5cf6'
-  },
-  // 10. DPS计算器
+  // 9. DPS计算器
   {
     id: 'dps-calc',
     name: 'DPS计算器',
@@ -162,7 +149,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://prts.wiki/favicon.ico',
     themeColor: '#ef4444'
   },
-  // 11. 罗德岛助理
+  // 10. 罗德岛助理
   {
     id: 'rhodes-assistant',
     name: '罗德岛助理 (App)',
@@ -174,7 +161,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://apps.apple.com/favicon.ico',
     themeColor: '#06b6d4'
   },
-  // 12. 寻访记录分析
+  // 11. 寻访记录分析
   {
     id: 'ark-gacha',
     name: '寻访记录分析',
@@ -186,7 +173,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://arkgacha.kwer.top/favicon.ico',
     themeColor: '#eab308'
   },
-  // 13. 阿米娅BOT
+  // 12. 阿米娅BOT
   {
     id: 'amiya-bot',
     name: '阿米娅BOT (Amiya-Bot)',
@@ -199,32 +186,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://github.com/favicon.ico',
     themeColor: '#6366f1'
   },
-  // 14. 少人WIKI
-  {
-    id: 'low-op-wiki',
-    name: '少人WIKI',
-    category: 'WIKI_GUIDE',
-    categoryLabel: '百科与攻略',
-    tags: ['少人通关', '极限挑战', '单核作业'],
-    description: '明日方舟极限少人通关知识库，记录危机合约顶分、主线突袭及活动少人登顶的硬核作业。',
-    url: 'https://arknights-lowop.com',
-    iconUrl: 'https://arknights-lowop.com/favicon.ico',
-    themeColor: '#f43f5e'
-  },
-  // 15. 剧情文本阅读器 ASTR
-  {
-    id: 'astr-reader',
-    name: '剧情文本阅读器 ASTR',
-    category: 'WIKI_GUIDE',
-    categoryLabel: '百科与攻略',
-    tags: ['全剧情阅读', '多语言分支', '立绘插画'],
-    description: '全章节与活动剧情文本提取器，支持支线剧情分支查看、BGM背景音乐联动及立绘差分沉浸浏览。',
-    url: 'https://0506449.github.io/Ark-Story-Reader/',
-    githubUrl: 'https://github.com/0506449/Ark-Story-Reader',
-    iconUrl: 'https://github.com/favicon.ico',
-    themeColor: '#64748b'
-  },
-  // 16. Mirror酱
+  // 13. Mirror酱
   {
     id: 'mirror-chyan',
     name: 'Mirror酱',
@@ -236,33 +198,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://mirrorchyan.com/favicon.ico',
     themeColor: '#d946ef'
   },
-  // 17. 峯驰物流
-  {
-    id: 'fengchi-logistics',
-    name: '峯驰物流',
-    category: 'NEWS_RADAR',
-    categoryLabel: '资讯与情报',
-    tags: ['官方资讯', '推送服务', '活动预警'],
-    description: '游戏官方公告与活动信息聚合推送系统，支持多种 Webhook 接入和官方推文第一线速递。',
-    url: 'https://github.com/ARK-Fengchi',
-    githubUrl: 'https://github.com/ARK-Fengchi',
-    iconUrl: 'https://github.com/favicon.ico',
-    themeColor: '#0ea5e9'
-  },
-  // 18. Arknights-Mower
-  {
-    id: 'arknights-mower',
-    name: 'Arknights-Mower (基建除草机)',
-    category: 'TOOLS_ASSISTANT',
-    categoryLabel: '效率与辅助',
-    tags: ['基建排班', '全自动换班', '体力精算'],
-    description: '纯 Python 开发的自动化高效基建换班与日常无人值守托管工具，追求基建产出收益最大化。',
-    url: 'https://github.com/ArkMower/arknights-mower',
-    githubUrl: 'https://github.com/ArkMower/arknights-mower',
-    iconUrl: 'https://github.com/favicon.ico',
-    themeColor: '#d97706'
-  },
-  // 19. Bilibili游戏中心
+  // 14. Bilibili游戏中心
   {
     id: 'bilibili-arknights',
     name: 'Bilibili游戏中心 明日方舟专区',
@@ -270,7 +206,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     categoryLabel: '社区与生态',
     tags: ['官方活动', '同人创作', '前瞻直播'],
     description: '官方合作大型社区，版本前瞻特辑直播预告、官方创作者激励活动与同人二创交流基地。',
-    url: 'https://game.bilibili.com/arknights/',
+    url: 'https://game.bilibili.com/platform/arknights',
     iconUrl: 'https://www.bilibili.com/favicon.ico',
     themeColor: '#fb7299'
   }
