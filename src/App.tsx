@@ -976,7 +976,7 @@ export default function App() {
   // Main app
   // -----------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-[#080a0e] text-slate-100 flex flex-col font-mono select-none">
+    <div className="h-screen overflow-hidden bg-[#080a0e] text-slate-100 flex flex-col font-mono select-none" style={{ height: '100dvh' }}>
       <PRTSNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
