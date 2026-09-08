@@ -15,7 +15,9 @@ import {
   Play,
   Sliders,
   Bell,
-  Check
+  Check,
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { DoctorProfile } from '../types';
 import { prtsAudio } from '../utils/audio';
@@ -32,6 +34,8 @@ interface PRTSNavbarProps {
   onToggleBeacon: () => void;
   nearbyCount: number;
   locationName: string;
+  /** Open the friend-links modal (友情链接). */
+  onOpenFriendLinks: () => void;
 }
 
 export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
@@ -45,6 +49,7 @@ export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
   onToggleBeacon,
   nearbyCount,
   locationName,
+  onOpenFriendLinks,
 }) => {
   const [isMuted, setIsMuted] = useState(prtsAudio.getIsMuted());
   const [volume, setVolume] = useState(prtsAudio.getVolume());
@@ -244,6 +249,21 @@ export const PRTSNavbar: React.FC<PRTSNavbarProps> = ({
         >
           <Radio size={14} />
           战术密话与日志
+        </button>
+
+        <span className="w-px h-5 bg-slate-700/70 mx-1 shrink-0 hidden sm:block" />
+
+        <button
+          onClick={() => {
+            prtsAudio.playClick();
+            onOpenFriendLinks();
+          }}
+          className="px-3 py-1.5 rounded text-xs font-mono flex items-center gap-1.5 transition-all whitespace-nowrap text-cyan-300 border border-cyan-700/50 bg-cyan-950/40 hover:bg-cyan-900/60 hover:border-cyan-500 hover:shadow-[0_0_10px_rgba(6,182,212,0.25)]"
+          title="明日方舟生态友情链接 (数据/百科/工具/资讯)"
+        >
+          <Globe size={14} />
+          友情链接
+          <ExternalLink size={11} className="opacity-70" />
         </button>
       </nav>
 

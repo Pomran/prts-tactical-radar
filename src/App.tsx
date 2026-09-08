@@ -975,6 +975,7 @@ export default function App() {
         onToggleBeacon={handleToggleBeacon}
         nearbyCount={filteredDoctors.length}
         locationName={locationName}
+        onOpenFriendLinks={() => setIsFriendLinksModalOpen(true)}
       />
 
       <main className="flex-1 w-full relative overflow-hidden flex flex-col">
