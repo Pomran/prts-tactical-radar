@@ -624,6 +624,8 @@ export default function App() {
     stopGpsWatchRef.current?.();
     stopGpsWatchRef.current = startGpsWatch(
       (lat, lng, acc) => {
+        // 已拿到可用坐标（acc≤200 粗定位）→ 提示条淡出，后台继续精化到街道级
+        setIsLocating(false);
         const jitter = applyJitter(lat, lng);
         setMyProfile((prev) => ({ ...prev, lat, lng, jitterLat: jitter.lat, jitterLng: jitter.lng, accuracy: acc }));
         setLocationName(`GPS 定位 · 精度 ±${Math.round(acc)}m`);
@@ -668,6 +670,7 @@ export default function App() {
         const jitter = applyJitter(browserGeo.lat, browserGeo.lng);
         setMyProfile((prev) => ({ ...prev, lat: browserGeo.lat, lng: browserGeo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng, accuracy: browserGeo.accuracy }));
         setLocationName(`GPS 定位 · 精度 ±${Math.round(browserGeo.accuracy)}m`);
+        setIsLocating(false);
         refreshNearby(browserGeo.lat, browserGeo.lng);
         pushPresence(browserGeo.lat, browserGeo.lng);
         return;
@@ -679,6 +682,7 @@ export default function App() {
         const jitter = applyJitter(gaodeGeo.lat, gaodeGeo.lng);
         setMyProfile((prev) => ({ ...prev, lat: gaodeGeo.lat, lng: gaodeGeo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`Gaode 定位 · ${gaodeGeo.city} [${gaodeGeo.lat.toFixed(2)}, ${gaodeGeo.lng.toFixed(2)}]`);
+        setIsLocating(false);
         refreshNearby(gaodeGeo.lat, gaodeGeo.lng);
         pushPresence(gaodeGeo.lat, gaodeGeo.lng);
         return;
@@ -690,6 +694,7 @@ export default function App() {
         const jitter = applyJitter(geo.lat, geo.lng);
         setMyProfile((prev) => ({ ...prev, lat: geo.lat, lng: geo.lng, jitterLat: jitter.lat, jitterLng: jitter.lng }));
         setLocationName(`IP 定位 · ${geo.city} [${geo.lat.toFixed(2)}, ${geo.lng.toFixed(2)}]`);
+        setIsLocating(false);
         refreshNearby(geo.lat, geo.lng);
         pushPresence(geo.lat, geo.lng);
         return;
