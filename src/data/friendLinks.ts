@@ -97,20 +97,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     badge: '开源神兵',
     recommended: true
   },
-  // 6. PRTS.Map
-  {
-    id: 'prts-map',
-    name: 'PRTS.Map (关卡地图规划)',
-    category: 'TOOLS_ASSISTANT',
-    categoryLabel: '效率与辅助',
-    tags: ['地图模拟', '出怪波次', '射程演算'],
-    description: '高度还原关卡地图的战术部署模拟器，支持干员高低台部署、射程覆盖测算与敌人移动路线演算。',
-    url: 'https://prts.maa.plus',
-    iconUrl: 'https://prts.maa.plus/favicon.ico',
-    themeColor: '#3b82f6',
-    recommended: true
-  },
-  // 7. 小刻食堂
+  // 6. 小刻食堂
   {
     id: 'ceobe-canteen',
     name: '小刻食堂 (Ceobe Canteen)',
@@ -125,7 +112,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     badge: '蹲饼神器',
     recommended: true
   },
-  // 8. tomimi.dev
+  // 7. tomimi.dev
   {
     id: 'tomimi-dev',
     name: 'tomimi.dev (集成战略小帮手)',
@@ -137,7 +124,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://tomimi.dev/favicon.ico',
     themeColor: '#14b8a6'
   },
-  // 9. DPS计算器
+  // 8. DPS计算器
   {
     id: 'dps-calc',
     name: 'DPS计算器',
@@ -149,19 +136,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://prts.wiki/favicon.ico',
     themeColor: '#ef4444'
   },
-  // 10. 罗德岛助理
-  {
-    id: 'rhodes-assistant',
-    name: '罗德岛助理 (App)',
-    category: 'TOOLS_ASSISTANT',
-    categoryLabel: '效率与辅助',
-    tags: ['移动App', '理智提醒', '公招识别'],
-    description: '移动端随身助理应用，支持理智溢出倒计时通知、公招截图识别与干员满练度材料一键清单。',
-    url: 'https://apps.apple.com/cn/app/id1494951478',
-    iconUrl: 'https://apps.apple.com/favicon.ico',
-    themeColor: '#06b6d4'
-  },
-  // 11. 寻访记录分析
+  // 9. 寻访记录分析
   {
     id: 'ark-gacha',
     name: '寻访记录分析',
@@ -173,7 +148,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://arkgacha.kwer.top/favicon.ico',
     themeColor: '#eab308'
   },
-  // 12. 阿米娅BOT
+  // 10. 阿米娅BOT
   {
     id: 'amiya-bot',
     name: '阿米娅BOT (Amiya-Bot)',
@@ -186,7 +161,7 @@ export const FRIEND_LINKS: FriendLink[] = [
     iconUrl: 'https://github.com/favicon.ico',
     themeColor: '#6366f1'
   },
-  // 13. Mirror酱
+  // 11. Mirror酱
   {
     id: 'mirror-chyan',
     name: 'Mirror酱',
@@ -197,17 +172,5 @@ export const FRIEND_LINKS: FriendLink[] = [
     url: 'https://mirrorchyan.com',
     iconUrl: 'https://mirrorchyan.com/favicon.ico',
     themeColor: '#d946ef'
-  },
-  // 14. Bilibili游戏中心
-  {
-    id: 'bilibili-arknights',
-    name: 'Bilibili游戏中心 明日方舟专区',
-    category: 'COMMUNITY',
-    categoryLabel: '社区与生态',
-    tags: ['官方活动', '同人创作', '前瞻直播'],
-    description: '官方合作大型社区，版本前瞻特辑直播预告、官方创作者激励活动与同人二创交流基地。',
-    url: 'https://game.bilibili.com/platform/arknights',
-    iconUrl: 'https://www.bilibili.com/favicon.ico',
-    themeColor: '#fb7299'
   }
 ];

@@ -156,11 +156,6 @@ export const FriendLinksModal: React.FC<FriendLinksModalProps> = ({ isOpen, onCl
                 </button>
               )}
             </div>
-
-            <div className="text-xs text-slate-400 font-mono shrink-0 flex items-center gap-1.5 self-end sm:self-center">
-              <ShieldCheck size={14} className="text-emerald-400" />
-              <span>全站经人工验证与安全审计</span>
-            </div>
           </div>
 
           {/* Category Filter Tabs */}
