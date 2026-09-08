@@ -40,6 +40,7 @@ interface RadarViewProps {
   filter: RadarFilter;
   setFilter: React.Dispatch<React.SetStateAction<RadarFilter>>;
   isScanning: boolean;
+  isLocating: boolean;
   onToggleLocationOffset: () => void;
   onRegenerateOffset: () => void;
   onSetOffsetRadius: (radiusMeters: number) => void;
@@ -58,6 +59,7 @@ export const RadarView: React.FC<RadarViewProps> = ({
   filter,
   setFilter,
   isScanning,
+  isLocating,
   onToggleLocationOffset,
   onRegenerateOffset,
   onSetOffsetRadius,
@@ -771,6 +773,16 @@ export const RadarView: React.FC<RadarViewProps> = ({
         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[450] px-4 py-2 bg-[#09101a]/95 border border-emerald-500/80 text-emerald-300 text-xs font-mono rounded-full shadow-[0_0_20px_rgba(16,185,129,0.3)] backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2 pointer-events-none">
           <ShieldCheck size={14} className="text-emerald-400" />
           <span>{offsetToast}</span>
+        </div>
+      )}
+
+      {/* GPS 定位加载轻提示条 */}
+      {isLocating && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[450] px-4 py-1.5 bg-[#080d14]/80 border border-[#00e5ff]/25 text-[#00e5ff]/90 text-[11px] font-mono rounded-full backdrop-blur-md flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 pointer-events-none">
+          <span className="relative flex items-center justify-center w-3 h-3">
+            <Compass size={13} className="text-[#00e5ff] animate-spin" style={{ animationDuration: '2.5s' }} />
+          </span>
+          <span>正在获取 GPS 定位…</span>
         </div>
       )}
 

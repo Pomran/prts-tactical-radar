@@ -256,6 +256,8 @@ export default function App() {
   // -----------------------------------------------------------------------
   const [nearbyDoctors, setNearbyDoctors] = useState<DoctorProfile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  // GPS 定位加载中（进入雷达后仍在获取/精化定位，精度到街道级后关闭）。
+  const [isLocating, setIsLocating] = useState(true);
   // Persistent beacon deployed at my current location (常驻信标).
   const [beaconActive, setBeaconActive] = useState(false);
 
@@ -638,6 +640,8 @@ export default function App() {
         refreshNearby(lat, lng);
       },
       async (lat, lng, acc) => {
+        // 定位流程结束（含 60s 兜底 / GPS 不可用）→ 关闭加载提示
+        setIsLocating(false);
         if (lat === null || lng === null || !Number.isFinite(acc) || acc > 1000) return;
         // 达到可用精度后做一次逆地理编码，把街道名显示出来
         const addr = await gaodeRegeo(lat, lng);
@@ -717,6 +721,7 @@ export default function App() {
         pushPresence(gaodeGeo.lat, gaodeGeo.lng);
         setIsScanning(false);
         beginGpsWatch();
+        setIsLocating(false);
         return;
       }
       const geo = await fetchIPGeolocation();
@@ -728,13 +733,16 @@ export default function App() {
         pushPresence(geo.lat, geo.lng);
         setIsScanning(false);
         beginGpsWatch();
+        setIsLocating(false);
         return;
       }
       alert('定位失败，请检查网络后重试');
       setIsScanning(false);
+      setIsLocating(false);
     };
 
     setIsScanning(true);
+    setIsLocating(true);
 
     // 在手势同步阶段解锁音频,否则异步定位回调里的音效会被浏览器静音
     prtsAudio.unlock();
@@ -991,6 +999,7 @@ export default function App() {
             filter={filter}
             setFilter={setFilter}
             isScanning={isScanning}
+            isLocating={isLocating}
             onToggleLocationOffset={handleToggleCamouflage}
             onRegenerateOffset={handleRegenerateOffset}
             onSetOffsetRadius={handleSetOffsetRadius}
