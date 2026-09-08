@@ -35,13 +35,19 @@ export type Faction =
   | 'Babel'
   | 'Columbia'
   | 'Aegir'
-  | 'Siesta';
+  | 'Siesta'
+  | 'Sargon'
+  | 'Independent'
+  | 'S.E.E.S.'
+  | 'Team Rainbow'
+  | 'Monster Hunter'
+  | 'Dungeon Meshi';
 
 export interface Operator {
   id: string;
   name: string;
   cnName: string;
-  rarity: 6 | 5 | 4 | 3;
+  rarity: 6 | 5 | 4 | 3 | 2 | 1;
   classType: OperatorClass;
   faction: Faction;
   avatar: string; // SVG or data URL

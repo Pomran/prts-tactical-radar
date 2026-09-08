@@ -29,8 +29,13 @@ export const createOperatorAvatarSVG = (
     | 'FEATHER_EARS'
     | 'DOG_EARS'
     | 'SNAKE_WINGS'
-    | 'DEER_HORNS',
-  accessory: string = ''
+    | 'DEER_HORNS'
+    | 'ROBOT_EARS'
+    | 'JERBOA_EARS'
+    | 'HORNS'
+    | 'HUMAN',
+  accessory: string = '',
+  badgeText: string = '6★'
 ): string => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
@@ -76,7 +81,7 @@ export const createOperatorAvatarSVG = (
       : features === 'DEVIL_HORNS'
       ? `<path d="M 28 32 C 15 20 20 5 18 3 C 28 9 34 23 34 32 Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>
          <path d="M 72 32 C 85 20 80 5 82 3 C 72 9 66 23 66 32 Z" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>`
-      : features === 'SHEEP_HORNS'
+      : features === 'SHEEP_HORNS' || features === 'HORNS'
       ? `<path d="M 26 34 C 12 24 10 40 22 45 C 30 47 32 38 26 34 Z" fill="#d97706" stroke="#78350f" stroke-width="1.5"/>
          <path d="M 74 34 C 88 24 90 40 78 45 C 70 47 68 38 74 34 Z" fill="#d97706" stroke="#78350f" stroke-width="1.5"/>`
       : features === 'CRYSTAL_SPINE'
@@ -117,6 +122,19 @@ export const createOperatorAvatarSVG = (
       : features === 'FISH_FIN'
       ? `<path d="M 24 38 C 10 32 12 18 20 22 C 24 24 26 32 26 38 Z" fill="#38bdf8" stroke="#0284c7" stroke-width="1.2"/>
          <path d="M 76 38 C 90 32 88 18 80 22 C 76 24 74 32 74 38 Z" fill="#38bdf8" stroke="#0284c7" stroke-width="1.2"/>`
+      : features === 'ROBOT_EARS'
+      ? `<rect x="16" y="32" width="10" height="18" rx="2" fill="#94a3b8" stroke="#38bdf8" stroke-width="1.5"/>
+         <circle cx="21" cy="41" r="2.5" fill="#38bdf8" filter="url(#glow)"/>
+         <rect x="74" y="32" width="10" height="18" rx="2" fill="#94a3b8" stroke="#38bdf8" stroke-width="1.5"/>
+         <circle cx="79" cy="41" r="2.5" fill="#38bdf8" filter="url(#glow)"/>`
+      : features === 'JERBOA_EARS'
+      ? `<ellipse cx="27" cy="18" rx="10" ry="16" fill="${hairColor}" stroke="#1e293b" stroke-width="1.5"/>
+         <ellipse cx="27" cy="18" rx="6" ry="11" fill="#fed7aa" opacity="0.6"/>
+         <ellipse cx="73" cy="18" rx="10" ry="16" fill="${hairColor}" stroke="#1e293b" stroke-width="1.5"/>
+         <ellipse cx="73" cy="18" rx="6" ry="11" fill="#fed7aa" opacity="0.6"/>`
+      : features === 'HUMAN'
+      ? `<circle cx="23" cy="48" r="4" fill="#ffe4d6" stroke="#fb923c" stroke-width="1"/>
+         <circle cx="77" cy="48" r="4" fill="#ffe4d6" stroke="#fb923c" stroke-width="1"/>`
       : ''
   }
 
@@ -210,12 +228,548 @@ export const createOperatorAvatarSVG = (
          <ellipse cx="77" cy="8" rx="2.5" ry="4" fill="#f97316" filter="url(#glow)"/>`
       : accessory === 'BELL'
       ? `<path d="M 46 8 C 46 4 54 4 54 8 L 58 16 L 42 16 Z" fill="#facc15" stroke="#ca8a04" stroke-width="1"/>`
+      : accessory === 'EVOKER'
+      ? `<circle cx="78" cy="68" r="10" fill="#0284c7" opacity="0.4" filter="url(#glow)"/>
+         <rect x="68" y="65" width="14" height="5" rx="1" fill="#cbd5e1" stroke="#0284c7" stroke-width="1"/>
+         <rect x="74" y="69" width="4" height="8" rx="1" fill="#1e293b" stroke="#0284c7" stroke-width="1"/>
+         <circle cx="50" cy="10" r="5" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2" filter="url(#glow)"/>`
+      : accessory === 'AIGIS_BAND'
+      ? `<path d="M 24 33 Q 50 22 76 33" stroke="#ef4444" stroke-width="3" fill="none"/>
+         <circle cx="22" cy="39" r="3" fill="#38bdf8" filter="url(#glow)"/>
+         <circle cx="78" cy="39" r="3" fill="#38bdf8" filter="url(#glow)"/>`
+      : accessory === 'SEES_BOW'
+      ? `<circle cx="50" cy="71" r="3" fill="#f43f5e"/>
+         <polygon points="43,71 47,68 47,74" fill="#f43f5e"/>
+         <polygon points="57,71 53,68 53,74" fill="#f43f5e"/>
+         <path d="M 76 16 Q 84 30 78 44" stroke="#f43f5e" stroke-width="2" fill="none"/>`
+      : accessory === 'DAGGER'
+      ? `<rect x="34" y="62" width="28" height="3" rx="1" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+         <polygon points="62,60.5 70,63.5 62,66.5" fill="#cbd5e1"/>
+         <rect x="30" y="61.5" width="6" height="4" rx="1" fill="#7f1d1d"/>
+         <circle cx="50" cy="73" r="3" fill="#ef4444" filter="url(#glow)"/>`
+      : accessory === 'WHITE_FLAG'
+      ? `<line x1="74" y1="12" x2="74" y2="40" stroke="#f8fafc" stroke-width="2"/>
+         <polygon points="74,12 88,18 74,24" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+         <circle cx="28" cy="22" r="5" fill="#eab308" filter="url(#glow)"/>
+         <path d="M 28 17 Q 30 14 32 15" stroke="#15803d" stroke-width="1.2" fill="none"/>`
+      : accessory === 'SUSHI_KNIFE'
+      ? `<rect x="72" y="16" width="12" height="18" rx="1" fill="#e2e8f0" stroke="#475569" stroke-width="1.2"/>
+         <rect x="76" y="34" width="4" height="8" rx="1" fill="#78350f"/>`
+      : accessory === 'BASEBALL_CAP'
+      ? `<path d="M 24 28 C 28 14 72 14 76 28 Z" fill="#0284c7"/>
+         <path d="M 20 28 Q 50 22 80 28" stroke="#38bdf8" stroke-width="2.5" fill="none"/>`
+      : accessory === 'BAMBOO_HAT'
+      ? `<polygon points="50,12 18,28 82,28" fill="#d97706" stroke="#92400e" stroke-width="1.5"/>
+         <line x1="50" y1="12" x2="50" y2="28" stroke="#78350f" stroke-width="1"/>`
+      : accessory === 'SYRINGE'
+      ? `<rect x="74" y="16" width="6" height="14" rx="1" fill="#bae6fd" stroke="#0284c7" stroke-width="1"/>
+         <line x1="77" y1="10" x2="77" y2="16" stroke="#94a3b8" stroke-width="1.5"/>
+         <rect x="75" y="20" width="4" height="8" fill="#ef4444"/>`
       : ''
   }
 
-  <!-- PRTS 6★ Tactical Badge in corner -->
-  <rect x="69" y="71" width="23" height="21" rx="3" fill="#0b1320" stroke="${themeColor}" stroke-width="1.2"/>
-  <text x="80.5" y="85" font-family="monospace" font-size="9" fill="${themeColor}" text-anchor="middle" font-weight="bold">6★</text>
+  <!-- PRTS Tactical Badge in corner -->
+  <rect x="64" y="71" width="30" height="21" rx="3" fill="#0b1320" stroke="${themeColor}" stroke-width="1.2"/>
+  <text x="79" y="85" font-family="monospace" font-size="${badgeText.length > 2 ? '7.5' : '9'}" fill="${themeColor}" text-anchor="middle" font-weight="bold">${badgeText}</text>
+</svg>
+`)}`;
+};
+
+/**
+ * 虎狼丸专属高精白柴犬形象 SVG 头像渲染器
+ * 忠实还原《Persona 3 Reload》白柴、豆豆眉、口衔战术短刃、S.E.E.S.红色战术背带与召魔器装置
+ */
+export const createKoromaruAvatarSVG = (): string => {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <!-- Dark Hour P3R Cobalt/Crimson Radial Gradient -->
+    <radialGradient id="koroBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    
+    <!-- Tactical Blade Metallic Sheen Gradient -->
+    <linearGradient id="bladeMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="35%" stop-color="#e2e8f0"/>
+      <stop offset="50%" stop-color="#ffffff"/>
+      <stop offset="75%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+
+    <!-- Cerberus Crimson & Nether Fire Gradient -->
+    <linearGradient id="cerberusFlame" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#7f1d1d"/>
+      <stop offset="40%" stop-color="#dc2626"/>
+      <stop offset="80%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#fca5a5"/>
+    </linearGradient>
+
+    <!-- Alert Shiba Amber Eyes -->
+    <radialGradient id="shibaEye" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#f87171"/>
+      <stop offset="35%" stop-color="#dc2626"/>
+      <stop offset="75%" stop-color="#991b1b"/>
+      <stop offset="100%" stop-color="#450a0a"/>
+    </radialGradient>
+
+    <!-- Inner Shiba Ear Gradient -->
+    <linearGradient id="earInner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fecdd3"/>
+      <stop offset="65%" stop-color="#fda4af"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+
+    <!-- P3R Neon Glow Filter -->
+    <filter id="p3rGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2.5" flood-color="#ef4444" flood-opacity="0.8"/>
+    </filter>
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#00e5ff" flood-opacity="0.9"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Tactical Combat Ring (P3R Theme) -->
+  <circle cx="50" cy="50" r="48" fill="url(#koroBg)" stroke="#ef4444" stroke-width="2.2" filter="url(#p3rGlow)"/>
+  <circle cx="50" cy="50" r="44.5" fill="none" stroke="#00e5ff" stroke-width="0.8" stroke-dasharray="4,2.5" opacity="0.6"/>
+  
+  <!-- Clock ticks for Dark Hour midnight -->
+  <line x1="50" y1="3" x2="50" y2="7" stroke="#00e5ff" stroke-width="1.5"/>
+  <line x1="97" y1="50" x2="93" y2="50" stroke="#00e5ff" stroke-width="1.5"/>
+  <line x1="50" y1="97" x2="50" y2="93" stroke="#00e5ff" stroke-width="1.5"/>
+  <line x1="3" y1="50" x2="7" y2="50" stroke="#00e5ff" stroke-width="1.5"/>
+
+  <!-- ==================== SHIBA INU ANATOMY ==================== -->
+
+  <!-- Shiba Ears (Pointed, alert, with fluffy tufts) -->
+  <!-- Left Ear -->
+  <g>
+    <path d="M 21 38 L 15 13 C 19 9 32 15 37 24 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+    <path d="M 22 33 L 18 17 C 22 14 30 19 33 25 Z" fill="url(#earInner)"/>
+    <!-- Fluff in ear base -->
+    <path d="M 25 31 Q 23 27 28 29 Q 25 24 31 27" stroke="#ffffff" stroke-width="1.2" fill="none"/>
+  </g>
+
+  <!-- Right Ear -->
+  <g>
+    <path d="M 79 38 L 85 13 C 81 9 68 15 63 24 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+    <path d="M 78 33 L 82 17 C 78 14 70 19 67 25 Z" fill="url(#earInner)"/>
+    <!-- Fluff in ear base -->
+    <path d="M 75 31 Q 77 27 72 29 Q 75 24 69 27" stroke="#ffffff" stroke-width="1.2" fill="none"/>
+  </g>
+
+  <!-- Fluffy White Chest Fur Base -->
+  <path d="M 33 66 C 24 72 22 84 28 95 C 42 98 58 98 72 95 C 78 84 76 72 67 66 Z" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Shiba Head & Fluffy Cheeks -->
+  <path d="M 30 25 C 18 29 15 46 22 58 C 25 64 34 68 41 68 C 46 68 48 69 50 69 C 52 69 54 68 59 68 C 66 68 75 64 78 58 C 85 46 82 29 70 25 C 60 21 40 21 30 25 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2"/>
+
+  <!-- Distinct Shiba Cheek Fur Tufts -->
+  <path d="M 19 48 Q 13 52 18 56 Q 14 59 23 61" stroke="#cbd5e1" stroke-width="1.2" fill="#ffffff"/>
+  <path d="M 81 48 Q 87 52 82 56 Q 86 59 77 61" stroke="#cbd5e1" stroke-width="1.2" fill="#ffffff"/>
+
+  <!-- Forehead Center Soft Fur Texture -->
+  <path d="M 50 24 L 50 36" stroke="#e2e8f0" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M 47 28 L 47 34" stroke="#f1f5f9" stroke-width="0.8" stroke-linecap="round"/>
+  <path d="M 53 28 L 53 34" stroke="#f1f5f9" stroke-width="0.8" stroke-linecap="round"/>
+
+  <!-- Iconic Shiba "Mame-Mayu" (Adorable White Brow Spots) -->
+  <ellipse cx="37" cy="38" rx="4" ry="2.6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.8"/>
+  <ellipse cx="63" cy="38" rx="4" ry="2.6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="0.8"/>
+
+  <!-- Alert, Loyal & Heroic Shiba Eyes -->
+  <!-- Left Eye -->
+  <g>
+    <path d="M 31 46 Q 37 41 43 45" stroke="#0f172a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="38" cy="46" rx="4.5" ry="4.2" fill="url(#shibaEye)"/>
+    <circle cx="38" cy="46" r="2.2" fill="#0f172a"/>
+    <!-- Catchlights -->
+    <circle cx="36.5" cy="44.2" r="1.5" fill="#ffffff"/>
+    <circle cx="39.8" cy="47.5" r="0.8" fill="#ffffff"/>
+    <path d="M 33 48 Q 38 51 42 47" stroke="#0f172a" stroke-width="1" fill="none"/>
+  </g>
+
+  <!-- Right Eye -->
+  <g>
+    <path d="M 57 45 Q 63 41 69 46" stroke="#0f172a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="62" cy="46" rx="4.5" ry="4.2" fill="url(#shibaEye)"/>
+    <circle cx="62" cy="46" r="2.2" fill="#0f172a"/>
+    <!-- Catchlights -->
+    <circle cx="60.5" cy="44.2" r="1.5" fill="#ffffff"/>
+    <circle cx="63.8" cy="47.5" r="0.8" fill="#ffffff"/>
+    <path d="M 58 47 Q 62 51 67 48" stroke="#0f172a" stroke-width="1" fill="none"/>
+  </g>
+
+  <!-- Rosy Cute Blush under eyes -->
+  <ellipse cx="29" cy="53" rx="3.5" ry="1.8" fill="#fda4af" opacity="0.6"/>
+  <ellipse cx="71" cy="53" rx="3.5" ry="1.8" fill="#fda4af" opacity="0.6"/>
+
+  <!-- ==================== SHIBA MUZZLE & SNOUT ==================== -->
+  <ellipse cx="50" cy="56" rx="13" ry="9.5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Cute Wet Black Nose -->
+  <path d="M 46 51 C 47 48.5 53 48.5 54 51 C 54 54.5 51 56.5 50 56.5 C 49 56.5 46 54.5 46 51 Z" fill="#0f172a"/>
+  <!-- Nose Highlight -->
+  <ellipse cx="49" cy="50.8" rx="1.6" ry="0.9" fill="#ffffff" opacity="0.85"/>
+
+  <!-- Whisker dots -->
+  <circle cx="43" cy="57" r="0.6" fill="#94a3b8"/>
+  <circle cx="41" cy="59" r="0.6" fill="#94a3b8"/>
+  <circle cx="57" cy="57" r="0.6" fill="#94a3b8"/>
+  <circle cx="59" cy="59" r="0.6" fill="#94a3b8"/>
+
+  <!-- ==================== TACTICAL DAGGER IN MOUTH ==================== -->
+  <!-- Blade Hilt / Guard on Left -->
+  <g>
+    <!-- Pommel ring with tactical red tassel -->
+    <circle cx="16" cy="62" r="3.2" fill="none" stroke="#64748b" stroke-width="1.4"/>
+    <path d="M 14 65 C 12 70 15 74 13 78" stroke="#ef4444" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    
+    <!-- Grip with wrapped cords -->
+    <rect x="19" y="59" width="22" height="6" rx="1.5" fill="#0f172a" stroke="#334155" stroke-width="0.8"/>
+    <line x1="23" y1="59" x2="25" y2="65" stroke="#ef4444" stroke-width="1.2"/>
+    <line x1="28" y1="59" x2="30" y2="65" stroke="#ef4444" stroke-width="1.2"/>
+    <line x1="33" y1="59" x2="35" y2="65" stroke="#ef4444" stroke-width="1.2"/>
+    <line x1="38" y1="59" x2="40" y2="65" stroke="#ef4444" stroke-width="1.2"/>
+
+    <!-- Guard -->
+    <rect x="41" y="56.5" width="3" height="11" rx="1" fill="#334155" stroke="#94a3b8" stroke-width="0.8"/>
+  </g>
+
+  <!-- Dagger Blade extending to right -->
+  <g>
+    <path d="M 44 58 L 83 57 L 88 61 L 80 65 L 44 64 Z" fill="url(#bladeMetal)" stroke="#334155" stroke-width="1"/>
+    <!-- Blade center ridge line (Glint) -->
+    <line x1="44" y1="61" x2="84" y2="59.5" stroke="#ffffff" stroke-width="1.2"/>
+    <!-- Blade tip highlight sparkle -->
+    <polygon points="83,57 88,61 80,61" fill="#ffffff"/>
+    
+    <!-- Cerberus Crimson Flame Aura curling off blade -->
+    <path d="M 74 54 C 78 49 84 51 81 45 C 87 49 87 55 84 60 Z" fill="url(#cerberusFlame)" opacity="0.9" filter="url(#p3rGlow)"/>
+    <path d="M 64 56 C 68 51 72 52 70 48 C 75 51 74 56 72 59 Z" fill="#8b5cf6" opacity="0.75"/>
+    <circle cx="85" cy="46" r="1" fill="#fca5a5"/>
+    <circle cx="89" cy="55" r="1.2" fill="#ef4444"/>
+  </g>
+
+  <!-- Muzzle overlapping the dagger (firm bite grip) -->
+  <path d="M 46 59 C 48 62 52 62 54 59" stroke="#0f172a" stroke-width="1.6" fill="#ffffff" stroke-linecap="round"/>
+  <path d="M 44 60 Q 50 63 56 60" stroke="#cbd5e1" stroke-width="0.8" fill="none"/>
+
+  <!-- ==================== S.E.E.S. TACTICAL HARNESS & EVOKER ==================== -->
+  <!-- S.E.E.S. Signature Crimson Combat Strap -->
+  <g>
+    <path d="M 28 75 C 36 73 64 73 72 75 L 75 87 C 64 89 36 89 25 87 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1"/>
+    
+    <!-- Top & Bottom Edge Accents -->
+    <path d="M 28 75 C 36 73 64 73 72 75" stroke="#ef4444" stroke-width="1" fill="none"/>
+    <path d="M 25 87 C 36 89 64 89 75 87" stroke="#b91c1c" stroke-width="1" fill="none"/>
+
+    <!-- Central S.E.E.S. Evoker Mini Module / Buckle -->
+    <rect x="45" y="74" width="10" height="13" rx="2" fill="#1e293b" stroke="#94a3b8" stroke-width="1"/>
+    <rect x="47" y="76" width="6" height="4" rx="1" fill="#0f172a"/>
+    <!-- Cyan Evoker Active Power LED -->
+    <circle cx="50" cy="83" r="1.8" fill="#00e5ff" filter="url(#cyanGlow)"/>
+
+    <!-- "SEES" Armband Text -->
+    <text x="36" y="82.5" font-family="sans-serif" font-weight="900" font-size="5.2" fill="#ffffff" letter-spacing="0.5" text-anchor="middle">S</text>
+    <text x="64" y="82.5" font-family="sans-serif" font-weight="900" font-size="5.2" fill="#ffffff" letter-spacing="0.5" text-anchor="middle">E</text>
+  </g>
+
+  <!-- ==================== CORNER BADGES ==================== -->
+  <!-- Left P3R Collab Badge -->
+  <rect x="6" y="77" width="22" height="15" rx="3" fill="#09101d" stroke="#00e5ff" stroke-width="1.2"/>
+  <text x="17" y="88" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#38bdf8" text-anchor="middle">P3R</text>
+
+  <!-- Right 1★ Emerald Rarity Badge -->
+  <rect x="66" y="73" width="28" height="20" rx="4" fill="#022c22" stroke="#10b981" stroke-width="1.5"/>
+  <text x="80" y="87" font-family="monospace" font-size="9" font-weight="900" fill="#34d399" text-anchor="middle">1★</text>
+</svg>
+`)}`;
+};
+
+/**
+ * 企鹅物流大老板 · 大帝 (Emperor) 专属黑胶说唱皇帝企鹅 SVG 渲染器
+ */
+export const createEmperorAvatarSVG = (): string => {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="empBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    <linearGradient id="goldChain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="30%" stop-color="#eab308"/>
+      <stop offset="70%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#a16207"/>
+    </linearGradient>
+    <linearGradient id="empNeck" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="50%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+    <filter id="empGoldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2.5" flood-color="#f59e0b" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Vinyl DJ Ring -->
+  <circle cx="50" cy="50" r="48" fill="url(#empBg)" stroke="#f59e0b" stroke-width="2.5" filter="url(#empGoldGlow)"/>
+  <circle cx="50" cy="50" r="44.5" fill="none" stroke="#e2e8f0" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.5"/>
+
+  <!-- Emperor Penguin Head & Body -->
+  <!-- Back Black Plumage -->
+  <path d="M 32 20 C 18 25 15 48 20 66 C 24 78 35 88 50 88 C 65 88 76 78 80 66 C 85 48 82 25 68 20 C 58 16 42 16 32 20 Z" fill="#090d16" stroke="#1e293b" stroke-width="1.5"/>
+
+  <!-- Golden-Orange Emperor Neck Markings -->
+  <path d="M 23 42 C 20 54 28 62 38 64 C 33 56 31 46 34 38 C 28 38 25 40 23 42 Z" fill="url(#empNeck)"/>
+  <path d="M 77 42 C 80 54 72 62 62 64 C 67 56 69 46 66 38 C 72 38 75 40 77 42 Z" fill="url(#empNeck)"/>
+
+  <!-- Pure White Fluffy Chest / Belly -->
+  <path d="M 36 60 C 33 72 38 88 50 88 C 62 88 67 72 64 60 C 59 58 41 58 36 60 Z" fill="#f8fafc"/>
+
+  <!-- Penguin Beak (Sharp, hooked tip, with pink/orange stripe) -->
+  <path d="M 43 45 L 57 45 L 50 59 Z" fill="#0f172a" stroke="#334155" stroke-width="0.8"/>
+  <!-- Beak lateral orange-pink stripe -->
+  <path d="M 44 48 Q 50 56 50 58 Q 50 56 56 48" stroke="#fb923c" stroke-width="1.4" fill="none"/>
+
+  <!-- Pro Hip-Hop DJ Studio Headphones -->
+  <path d="M 22 36 C 22 14 78 14 78 36" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round"/>
+  <!-- Left Ear Cushion -->
+  <rect x="15" y="32" width="10" height="18" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+  <!-- Right Ear Cushion -->
+  <rect x="75" y="32" width="10" height="18" rx="4" fill="#0f172a" stroke="#f59e0b" stroke-width="1.5"/>
+
+  <!-- Iconic Pure Black Badass Sunglasses (With Gold Rims & White Reflection Glint) -->
+  <!-- Bridge -->
+  <rect x="44" y="36" width="12" height="3.5" rx="1" fill="#facc15"/>
+  <!-- Left Lens & Frame -->
+  <rect x="23" y="32" width="23" height="15" rx="4" fill="#020617" stroke="#eab308" stroke-width="1.6"/>
+  <line x1="26" y1="35" x2="35" y2="44" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+  <!-- Right Lens & Frame -->
+  <rect x="54" y="32" width="23" height="15" rx="4" fill="#020617" stroke="#eab308" stroke-width="1.6"/>
+  <line x1="57" y1="35" x2="66" y2="44" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+
+  <!-- Burning Cuban Cigar in Beak -->
+  <g>
+    <!-- Cigar Body -->
+    <rect x="52" y="52" width="24" height="4" rx="1.5" transform="rotate(-8 52 52)" fill="#78350f" stroke="#451a03" stroke-width="0.8"/>
+    <!-- Gold Cigar Band -->
+    <rect x="62" y="50.5" width="4" height="4.5" transform="rotate(-8 62 50.5)" fill="#eab308"/>
+    <!-- Glowing Ash Tip -->
+    <circle cx="75" cy="49" r="2.2" fill="#ef4444" filter="url(#empGoldGlow)"/>
+    <!-- Smoke trails -->
+    <path d="M 77 47 Q 82 43 80 38 Q 85 34 83 29" stroke="#cbd5e1" stroke-width="1.2" fill="none" opacity="0.75" stroke-linecap="round"/>
+  </g>
+
+  <!-- Heavy Gold Cuban Chain with Penguin Logistics "PL" Medallion -->
+  <g>
+    <!-- Gold Chain Loops -->
+    <path d="M 28 66 Q 50 82 72 66" fill="none" stroke="url(#goldChain)" stroke-width="3.2" stroke-linecap="round" filter="url(#empGoldGlow)"/>
+    <path d="M 31 69 Q 50 85 69 69" fill="none" stroke="url(#goldChain)" stroke-width="2.2" stroke-linecap="round"/>
+    <!-- Giant Round Gold PL Medallion -->
+    <circle cx="50" cy="80" r="8" fill="url(#goldChain)" stroke="#78350f" stroke-width="1" filter="url(#empGoldGlow)"/>
+    <circle cx="50" cy="80" r="6.2" fill="#0f172a"/>
+    <text x="50" y="83" font-family="sans-serif" font-weight="900" font-size="6.5" fill="#facc15" text-anchor="middle">PL</text>
+  </g>
+
+  <!-- Left Bottom Tag: PL -->
+  <rect x="6" y="75" width="20" height="16" rx="3" fill="#09101d" stroke="#eab308" stroke-width="1.2"/>
+  <text x="16" y="86.5" font-family="sans-serif" font-size="7" font-weight="900" fill="#facc15" text-anchor="middle">PL</text>
+
+  <!-- Right Bottom Tag: 6★ BOSS -->
+  <rect x="64" y="73" width="30" height="20" rx="4" fill="#451a03" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="79" y="87" font-family="monospace" font-size="8.5" font-weight="900" fill="#fbbf24" text-anchor="middle">6★</text>
+</svg>
+`)}`;
+};
+
+/**
+ * 萨米肉鸽传奇怪盗 · 鸭爵 (Duck Lord) 专属绅士鸭鸭 SVG 渲染器
+ */
+export const createDuckLordAvatarSVG = (): string => {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="duckBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2e1065"/>
+      <stop offset="60%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </radialGradient>
+    <radialGradient id="duckGold" cx="40%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="45%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#854d0e"/>
+    </radialGradient>
+    <filter id="duckGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2.5" flood-color="#a855f7" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Outer Victorian Aristocrat Ring -->
+  <circle cx="50" cy="50" r="48" fill="url(#duckBg)" stroke="#c084fc" stroke-width="2.5" filter="url(#duckGlow)"/>
+  <circle cx="50" cy="50" r="44.5" fill="none" stroke="#eab308" stroke-width="0.8" stroke-dasharray="4,2.5" opacity="0.6"/>
+
+  <!-- Flying Gold Coins / Originium Ingots Sparkles -->
+  <circle cx="16" cy="24" r="3" fill="url(#duckGold)"/>
+  <circle cx="84" cy="26" r="2.5" fill="url(#duckGold)"/>
+  <polygon points="20,16 22,12 24,16 26,18 22,18" fill="#facc15"/>
+
+  <!-- Duck Body & Head (Plump, Bright Golden Yellow Duck) -->
+  <path d="M 32 36 C 22 42 20 62 26 74 C 32 84 42 88 50 88 C 58 88 68 84 74 74 C 80 62 78 42 68 36 C 58 32 42 32 32 36 Z" fill="#facc15" stroke="#ca8a04" stroke-width="1.2"/>
+  
+  <!-- Fluffy Cheeks -->
+  <ellipse cx="27" cy="62" rx="4" ry="2.5" fill="#f59e0b" opacity="0.5"/>
+  <ellipse cx="73" cy="62" rx="4" ry="2.5" fill="#f59e0b" opacity="0.5"/>
+
+  <!-- Plump Orange Duck Bill (Broad flat bill with slight witty smirk) -->
+  <path d="M 33 58 C 30 62 38 69 50 69 C 62 69 70 62 67 58 C 63 53 37 53 33 58 Z" fill="#f97316" stroke="#c2410c" stroke-width="1.2"/>
+  <!-- Bill Nostrils -->
+  <ellipse cx="46" cy="58" rx="1.2" ry="0.8" fill="#7c2d12"/>
+  <ellipse cx="54" cy="58" rx="1.2" ry="0.8" fill="#7c2d12"/>
+
+  <!-- Expressive Eyes -->
+  <!-- Left Eye (Sharp, curious) -->
+  <ellipse cx="38" cy="48" rx="4" ry="4.5" fill="#0f172a"/>
+  <circle cx="37" cy="46.5" r="1.4" fill="#ffffff"/>
+
+  <!-- Right Eye with Gold Chain Monocle -->
+  <g>
+    <ellipse cx="62" cy="48" rx="4" ry="4.5" fill="#0f172a"/>
+    <circle cx="61" cy="46.5" r="1.4" fill="#ffffff"/>
+    <!-- Gold Monocle Rim & Glint -->
+    <circle cx="62" cy="48" r="7.5" fill="#38bdf8" fill-opacity="0.2" stroke="#eab308" stroke-width="1.6"/>
+    <line x1="58" y1="44" x2="65" y2="51" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.8"/>
+    <!-- Hanging Gold Chain -->
+    <path d="M 69 52 Q 74 62 70 74" fill="none" stroke="#eab308" stroke-width="1.2" stroke-dasharray="2,1.5"/>
+  </g>
+
+  <!-- Victorian Silk Top Hat (Black with Crimson Velvet Ribbon) -->
+  <g>
+    <!-- Hat Brim -->
+    <ellipse cx="50" cy="34" rx="28" ry="6" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+    <!-- Hat Crown -->
+    <path d="M 28 34 L 32 10 L 68 10 L 72 34 Z" fill="#090d16" stroke="#1e293b" stroke-width="1"/>
+    <!-- Hat Top Flat Lid -->
+    <ellipse cx="50" cy="10" rx="18" ry="4" fill="#1e293b"/>
+    <!-- Crimson Ribbon -->
+    <path d="M 29.5 30 L 30.5 24 L 69.5 24 L 70.5 30 Z" fill="#dc2626" stroke="#991b1b" stroke-width="0.8"/>
+    <!-- Gold Pin on Ribbon -->
+    <circle cx="50" cy="27" r="2.2" fill="url(#duckGold)"/>
+  </g>
+
+  <!-- Aristocrat Outfit (Black Tuxedo Collar & Dashing Red Bowtie) -->
+  <g>
+    <!-- White Shirt Collar -->
+    <polygon points="43,73 50,78 57,73 54,88 46,88" fill="#f8fafc"/>
+    <!-- Black Tuxedo Lapels -->
+    <path d="M 34 76 L 44 88 L 30 92 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+    <path d="M 66 76 L 56 88 L 70 92 Z" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+    <!-- Crimson Bowtie -->
+    <polygon points="44,72 50,75 44,78" fill="#dc2626"/>
+    <polygon points="56,72 50,75 56,78" fill="#dc2626"/>
+    <circle cx="50" cy="75" r="2.2" fill="#ef4444"/>
+  </g>
+
+  <!-- Left Bottom Tag: DUCK -->
+  <rect x="6" y="75" width="24" height="16" rx="3" fill="#0f172a" stroke="#c084fc" stroke-width="1.2"/>
+  <text x="18" y="86.5" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#e9d5ff" text-anchor="middle">DUCK</text>
+
+  <!-- Right Bottom Tag: 5★ -->
+  <rect x="66" y="73" width="28" height="20" rx="4" fill="#3b0764" stroke="#c084fc" stroke-width="1.5"/>
+  <text x="80" y="87" font-family="monospace" font-size="9" font-weight="900" fill="#f3e8ff" text-anchor="middle">5★</text>
+</svg>
+`)}`;
+};
+
+/**
+ * 萨尔贡密林阿达克利斯神鸟 · 大祭司 (High Priest) 专属金刚鹦鹉 SVG 渲染器
+ */
+export const createHighPriestAvatarSVG = (): string => {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="priestBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="60%" stop-color="#022c22"/>
+      <stop offset="100%" stop-color="#011612"/>
+    </radialGradient>
+    <linearGradient id="macawCrest" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="45%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="priestGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2.5" flood-color="#10b981" flood-opacity="0.8"/>
+    </filter>
+  </defs>
+
+  <!-- Rainforest God Feathered Ring -->
+  <circle cx="50" cy="50" r="48" fill="url(#priestBg)" stroke="#10b981" stroke-width="2.5" filter="url(#priestGlow)"/>
+  <circle cx="50" cy="50" r="44.5" fill="none" stroke="#facc15" stroke-width="0.8" stroke-dasharray="4,2.5" opacity="0.6"/>
+
+  <!-- Majestic Scarlet Macaw Crest Feathers (Standing tall with wild tropical gradient) -->
+  <path d="M 44 26 C 40 12 46 2 54 1 C 56 8 54 18 50 26 Z" fill="url(#macawCrest)"/>
+  <path d="M 36 28 C 30 16 34 6 42 6 C 43 14 42 22 40 28 Z" fill="#dc2626"/>
+  <path d="M 54 28 C 62 16 68 8 64 6 C 61 14 58 22 56 28 Z" fill="#0284c7"/>
+
+  <!-- Parrot Head Body (Vibrant Scarlet Red Feathering) -->
+  <path d="M 30 32 C 18 38 18 64 26 76 C 34 86 46 88 50 88 C 54 88 66 86 74 76 C 82 64 82 38 70 32 C 60 28 40 28 30 32 Z" fill="#dc2626" stroke="#991b1b" stroke-width="1.2"/>
+
+  <!-- Tropical Blue Wing Mantle on Shoulders -->
+  <path d="M 20 68 C 22 80 32 90 40 92 C 32 86 26 78 24 68 Z" fill="#0284c7"/>
+  <path d="M 80 68 C 78 80 68 90 60 92 C 68 86 74 78 76 68 Z" fill="#0284c7"/>
+
+  <!-- Characteristic White Macaw Facial Bare Skin Patch with Dark Feather Lines -->
+  <path d="M 33 42 C 30 46 32 58 38 60 C 44 60 46 54 46 48 C 46 42 40 40 33 42 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.8"/>
+  <path d="M 67 42 C 70 46 68 58 62 60 C 56 60 54 54 54 48 C 54 42 60 40 67 42 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.8"/>
+  <!-- Feather Line Accents around eyes -->
+  <path d="M 34 46 Q 38 48 42 47" stroke="#334155" stroke-width="0.8" fill="none"/>
+  <path d="M 33 51 Q 38 52 43 51" stroke="#334155" stroke-width="0.8" fill="none"/>
+  <path d="M 66 46 Q 62 48 58 47" stroke="#334155" stroke-width="0.8" fill="none"/>
+  <path d="M 67 51 Q 62 52 57 51" stroke="#334155" stroke-width="0.8" fill="none"/>
+
+  <!-- Sharp, Arrogant, Godly Eyes (Golden yellow iris) -->
+  <!-- Left Eye -->
+  <circle cx="39" cy="46" r="3.6" fill="#facc15" stroke="#854d0e" stroke-width="0.6"/>
+  <circle cx="39" cy="46" r="1.8" fill="#0f172a"/>
+  <circle cx="38" cy="45" r="0.8" fill="#ffffff"/>
+  <!-- Right Eye -->
+  <circle cx="61" cy="46" r="3.6" fill="#facc15" stroke="#854d0e" stroke-width="0.6"/>
+  <circle cx="61" cy="46" r="1.8" fill="#0f172a"/>
+  <circle cx="60" cy="45" r="0.8" fill="#ffffff"/>
+
+  <!-- Powerful Hooked Macaw Beak (Ivory Top with Obsidian Black Base/Underbeak) -->
+  <!-- Black Lower Beak -->
+  <path d="M 44 62 L 50 68 L 56 62 Z" fill="#0f172a"/>
+  <!-- Heavy Ivory Curved Upper Beak -->
+  <path d="M 41 50 C 41 46 59 46 59 50 L 58 64 C 54 72 46 72 42 64 Z" fill="#fef08a" stroke="#ca8a04" stroke-width="1"/>
+  <path d="M 50 50 L 50 69" stroke="#eab308" stroke-width="0.8"/>
+
+  <!-- Tribal Gold Earring & Beaded Choker of the Great Chief -->
+  <g>
+    <!-- Gold Ring on Left Feather -->
+    <ellipse cx="23" cy="52" rx="3.5" ry="5" fill="none" stroke="#facc15" stroke-width="1.8" filter="url(#priestGlow)"/>
+    <!-- Bone & Jade Beads at Neck -->
+    <circle cx="38" cy="80" r="3.2" fill="#10b981"/>
+    <circle cx="46" cy="83" r="3.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.8"/>
+    <circle cx="54" cy="83" r="3.5" fill="#f8fafc" stroke="#cbd5e1" stroke-width="0.8"/>
+    <circle cx="62" cy="80" r="3.2" fill="#10b981"/>
+    <!-- Central Sargon Sun Talisman -->
+    <polygon points="50,85 45,94 55,94" fill="#f59e0b"/>
+  </g>
+
+  <!-- Left Bottom Tag: SARGON -->
+  <rect x="6" y="75" width="25" height="16" rx="3" fill="#022c22" stroke="#10b981" stroke-width="1.2"/>
+  <text x="18.5" y="86.5" font-family="sans-serif" font-size="6" font-weight="900" fill="#6ee7b7" text-anchor="middle">SARGON</text>
+
+  <!-- Right Bottom Tag: 1★ GOD -->
+  <rect x="66" y="73" width="28" height="20" rx="4" fill="#022c22" stroke="#10b981" stroke-width="1.5"/>
+  <text x="80" y="87" font-family="monospace" font-size="9" font-weight="900" fill="#34d399" text-anchor="middle">1★</text>
 </svg>
 `)}`;
 };
@@ -226,7 +780,7 @@ export const OPERATOR_DATABASE: Operator[] = [
     id: 'amiya',
     name: 'Amiya',
     cnName: '阿米娅',
-    rarity: 6,
+    rarity: 5,
     classType: 'Caster',
     faction: 'Rhodes Island',
     color: '#00e5ff',
@@ -1523,21 +2077,7 @@ export const OPERATOR_DATABASE: Operator[] = [
     masterySkill: '精准猎杀 (专三)',
     moduleLevel: 3
   },
-  // 94. 桃金娘 (Myrtle)
-  {
-    id: 'myrtle',
-    name: 'Myrtle',
-    cnName: '桃金娘',
-    rarity: 4,
-    classType: 'Vanguard',
-    faction: 'Rhodes Island',
-    color: '#f43f5e',
-    avatar: createOperatorAvatarSVG('#f43f5e', '#fecdd3', '#e11d48', 'CAT_EARS', 'APPLES'),
-    quote: '太阳出来啦！白旗摇一摇，全员技力快速恢复！博士，大将军来支援你啦！',
-    masterySkill: '治愈之翼 (专三)',
-    moduleLevel: 3
-  },
-  // 95. 多萝西 (Dorothy)
+  // 94. 多萝西 (Dorothy)
   {
     id: 'dorothy',
     name: 'Dorothy',
@@ -1620,6 +2160,1038 @@ export const OPERATOR_DATABASE: Operator[] = [
     quote: '影子里的火种不会熄灭。长枪所指，灵魂将得到安歇。',
     masterySkill: '灵魂汲取 (专三)',
     moduleLevel: 3
+  },
+  // ===== 女神异闻录3 Reload (P3R) 联动特勤组 =====
+  // 101. 结城理 (Makoto Yuki)
+  {
+    id: 'makoto_yuki',
+    name: 'Makoto Yuki',
+    cnName: '结城理',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'S.E.E.S.',
+    color: '#0284c7',
+    avatar: createOperatorAvatarSVG('#0284c7', '#1e293b', '#38bdf8', 'HUMAN', 'EVOKER', 'P3R'),
+    quote: '哪怕终焉降临，我也绝不逃避。出来吧——俄耳甫斯（Orpheus）！',
+    masterySkill: '降临：弥赛亚 (专三)',
+    moduleLevel: 3
+  },
+  // 102. 埃癸斯 (Aigis)
+  {
+    id: 'aigis',
+    name: 'Aigis',
+    cnName: '埃癸斯',
+    rarity: 5,
+    classType: 'Sniper',
+    faction: 'S.E.E.S.',
+    color: '#f59e0b',
+    avatar: createOperatorAvatarSVG('#f59e0b', '#fef08a', '#0ea5e9', 'ROBOT_EARS', 'AIGIS_BAND', 'P3R'),
+    quote: '对暗影压制特化机装埃癸斯，全系统启动。由我来守护博士的安全！',
+    masterySkill: '狂宴扫射 (专三)',
+    moduleLevel: 3
+  },
+  // 103. 岳羽由加莉 (Yukari Takeba)
+  {
+    id: 'yukari',
+    name: 'Yukari Takeba',
+    cnName: '岳羽由加莉',
+    rarity: 5,
+    classType: 'Supporter',
+    faction: 'S.E.E.S.',
+    color: '#f43f5e',
+    avatar: createOperatorAvatarSVG('#f43f5e', '#78350f', '#f43f5e', 'HUMAN', 'SEES_BOW', 'P3R'),
+    quote: '风之箭已上弦！别小看我哦，S.E.E.S.的支援就交给我吧！',
+    masterySkill: '疾风破甲箭 (专三)',
+    moduleLevel: 3
+  },
+  // 104. 虎狼丸 (Koromaru)
+  {
+    id: 'koromaru',
+    name: 'Koromaru',
+    cnName: '虎狼丸',
+    rarity: 1,
+    classType: 'Specialist',
+    faction: 'S.E.E.S.',
+    color: '#ef4444',
+    avatar: createKoromaruAvatarSVG(),
+    quote: '汪！(嘴叼短刃警戒四周，身畔升腾起刻耳柏洛斯的暗炎，忠诚地护在博士身前。一星特勤干员，不占部署位！)',
+    masterySkill: '黑色狩猎 (满潜)',
+    moduleLevel: 1
+  },
+  // ===== 经典四星战神干员 (4★ Core Operators) =====
+  // 105. 桃金娘 (Myrtle)
+  {
+    id: 'myrtle',
+    name: 'Myrtle',
+    cnName: '桃金娘',
+    rarity: 4,
+    classType: 'Vanguard',
+    faction: 'Rim Billiton',
+    color: '#eab308',
+    avatar: createOperatorAvatarSVG('#eab308', '#fed7aa', '#ca8a04', 'HUMAN', 'WHITE_FLAG', '4★'),
+    quote: '金苹果举高高！白旗一摇，部署费用哗哗地来！',
+    masterySkill: '治愈之翼 (专三)',
+    moduleLevel: 3
+  },
+  // 106. 讯使 (Courier)
+  {
+    id: 'courier',
+    name: 'Courier',
+    cnName: '讯使',
+    rarity: 4,
+    classType: 'Vanguard',
+    faction: 'Kjerag',
+    color: '#0284c7',
+    avatar: createOperatorAvatarSVG('#0284c7', '#334155', '#0284c7', 'DEER_HORNS', 'BELL', '4★'),
+    quote: '谢拉格的信使随时听候差遣。博士，这份信件请您查收。',
+    masterySkill: '冲锋号令·防御 (专三)',
+    moduleLevel: 3
+  },
+  // 107. 红豆 (Vigna)
+  {
+    id: 'vigna',
+    name: 'Vigna',
+    cnName: '红豆',
+    rarity: 4,
+    classType: 'Vanguard',
+    faction: 'Rhodes Island',
+    color: '#ef4444',
+    avatar: createOperatorAvatarSVG('#ef4444', '#7f1d1d', '#ef4444', 'DEVIL_HORNS', '', '4★'),
+    quote: '摇滚就是我的生命！长矛一出，没有敌人能挡住我的冲锋！',
+    masterySkill: '攻击力强化·β (专三)',
+    moduleLevel: 3
+  },
+  // 108. 孑 (Jaye)
+  {
+    id: 'jaye',
+    name: 'Jaye',
+    cnName: '孑',
+    rarity: 4,
+    classType: 'Specialist',
+    faction: 'Lungmen',
+    color: '#0d9488',
+    avatar: createOperatorAvatarSVG('#0d9488', '#1e293b', '#0d9488', 'HUMAN', 'SUSHI_KNIFE', '4★'),
+    quote: '生鱼片摊位收摊了……博士，要切点什么刺身或者肉排吗？',
+    masterySkill: '刺身技巧 (专三)',
+    moduleLevel: 3
+  },
+  // 109. 砾 (Gravel)
+  {
+    id: 'gravel',
+    name: 'Gravel',
+    cnName: '砾',
+    rarity: 4,
+    classType: 'Specialist',
+    faction: 'Kazimierz',
+    color: '#f59e0b',
+    avatar: createOperatorAvatarSVG('#f59e0b', '#78350f', '#f59e0b', 'HUMAN', 'HEART', '4★'),
+    quote: '啾～亲爱的博士，砾随时都会替您挡下一切危险与刀刃哦。',
+    masterySkill: '鼠群 (专三)',
+    moduleLevel: 3
+  },
+  // 110. 蛇屠箱 (Cuora)
+  {
+    id: 'cuora',
+    name: 'Cuora',
+    cnName: '蛇屠箱',
+    rarity: 4,
+    classType: 'Defender',
+    faction: 'Columbia',
+    color: '#06b6d4',
+    avatar: createOperatorAvatarSVG('#06b6d4', '#1e293b', '#06b6d4', 'HUMAN', 'BASEBALL_CAP', '4★'),
+    quote: '全垒打！龟壳一缩，谁也别想从我身边过去！',
+    masterySkill: '壳状防御 (专三)',
+    moduleLevel: 3
+  },
+  // 111. 古米 (Gummy)
+  {
+    id: 'gummy',
+    name: 'Gummy',
+    cnName: '古米',
+    rarity: 4,
+    classType: 'Defender',
+    faction: 'Ursus',
+    color: '#f97316',
+    avatar: createOperatorAvatarSVG('#f97316', '#fdba74', '#ea580c', 'BEAR_EARS', 'APPLES', '4★'),
+    quote: '古米习惯了，平底锅既能煎牛排，也能拍晕坏蛋！',
+    masterySkill: '备用军粮 (专三)',
+    moduleLevel: 3
+  },
+  // 112. 白雪 (Shirayuki)
+  {
+    id: 'shirayuki',
+    name: 'Shirayuki',
+    cnName: '白雪',
+    rarity: 4,
+    classType: 'Sniper',
+    faction: 'Lungmen',
+    color: '#64748b',
+    avatar: createOperatorAvatarSVG('#64748b', '#f8fafc', '#334155', 'LEOPARD_EARS', 'BLADE', '4★'),
+    quote: '大手里剑，飞刃破阵。文月大人的安危由在下誓死守护。',
+    masterySkill: '凝霜 (专三)',
+    moduleLevel: 3
+  },
+  // 113. 梅 (May)
+  {
+    id: 'may',
+    name: 'May',
+    cnName: '梅',
+    rarity: 4,
+    classType: 'Sniper',
+    faction: 'Victoria',
+    color: '#eab308',
+    avatar: createOperatorAvatarSVG('#eab308', '#fed7aa', '#854d0e', 'FEATHER_EARS', '', '4★'),
+    quote: '嘎！皇家侦探梅在此，所有可疑人员统统束手就擒！',
+    masterySkill: '束缚电击枪 (专三)',
+    moduleLevel: 3
+  },
+  // 114. 流星 (Meteor)
+  {
+    id: 'meteor',
+    name: 'Meteor',
+    cnName: '流星',
+    rarity: 4,
+    classType: 'Sniper',
+    faction: 'Kazimierz',
+    color: '#16a34a',
+    avatar: createOperatorAvatarSVG('#16a34a', '#854d0e', '#15803d', 'PEGASUS_EARS', 'BOW', '4★'),
+    quote: '穿甲猎弓，直取重骑。大森林的清风引导着我的箭矢。',
+    masterySkill: '碎甲击 (专三)',
+    moduleLevel: 3
+  },
+  // 115. 远山 (Gitano)
+  {
+    id: 'gitano',
+    name: 'Gitano',
+    cnName: '远山',
+    rarity: 4,
+    classType: 'Caster',
+    faction: 'Sami',
+    color: '#7c3aed',
+    avatar: createOperatorAvatarSVG('#7c3aed', '#c084fc', '#6b21a8', 'DEER_HORNS', '', '4★'),
+    quote: '命运的塔罗牌已揭示结局。命运由天定，亦由博士之手谱写。',
+    masterySkill: '命运 (专三)',
+    moduleLevel: 3
+  },
+  // 116. 调香师 (Perfumer)
+  {
+    id: 'perfumer',
+    name: 'Perfumer',
+    cnName: '调香师',
+    rarity: 4,
+    classType: 'Medic',
+    faction: 'Minos',
+    color: '#84cc16',
+    avatar: createOperatorAvatarSVG('#84cc16', '#d9f99d', '#65a30d', 'FOX_EARS', 'WATER_DROP', '4★'),
+    quote: '薰衣草与迷迭香的安神芬芳，无论战线多远，都能治愈大家的身心。',
+    masterySkill: '熏衣草调香 (专三)',
+    moduleLevel: 3
+  },
+  // 117. 苏苏洛 (Sussurro)
+  {
+    id: 'sussurro',
+    name: 'Sussurro',
+    cnName: '苏苏洛',
+    rarity: 4,
+    classType: 'Medic',
+    faction: 'Siracusa',
+    color: '#06b6d4',
+    avatar: createOperatorAvatarSVG('#06b6d4', '#fed7aa', '#0891b2', 'FOX_EARS', 'SYRINGE', '4★'),
+    quote: '别放弃！只要我还有一口气，深度医疗泵就能把重伤员救回来！',
+    masterySkill: '深度治疗 (专三)',
+    moduleLevel: 3
+  },
+  // 118. 末药 (Myrrh)
+  {
+    id: 'myrrh',
+    name: 'Myrrh',
+    cnName: '末药',
+    rarity: 4,
+    classType: 'Medic',
+    faction: 'Rim Billiton',
+    color: '#10b981',
+    avatar: createOperatorAvatarSVG('#10b981', '#a7f3d0', '#047857', 'LEOPARD_EARS', '', '4★'),
+    quote: '草药研磨完毕，立刻给前线干员敷上止血散。',
+    masterySkill: '急救包 (专三)',
+    moduleLevel: 3
+  },
+  // 119. 波登可 (Podenco)
+  {
+    id: 'podenco',
+    name: 'Podenco',
+    cnName: '波登可',
+    rarity: 4,
+    classType: 'Supporter',
+    faction: 'Victoria',
+    color: '#a855f7',
+    avatar: createOperatorAvatarSVG('#a855f7', '#f3e8ff', '#9333ea', 'DOG_EARS', 'WHEAT', '4★'),
+    quote: '温室里的花朵开得真好呢。这一瓶孢子雾气，可以让烦人的敌人安静下来。',
+    masterySkill: '孢子扩散 (专三)',
+    moduleLevel: 3
+  },
+  // 120. 地灵 (Earthspirit)
+  {
+    id: 'earthspirit',
+    name: 'Earthspirit',
+    cnName: '地灵',
+    rarity: 4,
+    classType: 'Supporter',
+    faction: 'Leithanien',
+    color: '#b45309',
+    avatar: createOperatorAvatarSVG('#b45309', '#fed7aa', '#92400e', 'SHEEP_HORNS', '', '4★'),
+    quote: '地壳脉动异常。法杖共振，大地将绊住所有侵犯者的步伐。',
+    masterySkill: '地质震荡 (专三)',
+    moduleLevel: 3
+  },
+  // 121. 阿消 (Shaw)
+  {
+    id: 'shaw',
+    name: 'Shaw',
+    cnName: '阿消',
+    rarity: 4,
+    classType: 'Specialist',
+    faction: 'Lungmen',
+    color: '#ea580c',
+    avatar: createOperatorAvatarSVG('#ea580c', '#fdba74', '#c2410c', 'FOX_EARS', 'WATER_DROP', '4★'),
+    quote: '报告长官消防管道水压已充满准备发射高压水枪把敌人通通冲下悬崖！',
+    masterySkill: '高压水枪 (专三)',
+    moduleLevel: 3
+  },
+  // 122. 暗索 (Rope)
+  {
+    id: 'rope',
+    name: 'Rope',
+    cnName: '暗索',
+    rarity: 4,
+    classType: 'Specialist',
+    faction: 'Rim Billiton',
+    color: '#f97316',
+    avatar: createOperatorAvatarSVG('#f97316', '#ffedd5', '#ea580c', 'BUNNY_EARS', '', '4★'),
+    quote: '抓钩甩出去咯！嘿咻，不管是什么大块头，都给我乖乖掉进坑里吧！',
+    masterySkill: '勾爪突击 (专三)',
+    moduleLevel: 3
+  },
+  // 123. 霜叶 (Frostleaf)
+  {
+    id: 'frostleaf',
+    name: 'Frostleaf',
+    cnName: '霜叶',
+    rarity: 4,
+    classType: 'Guard',
+    faction: 'Columbia',
+    color: '#0284c7',
+    avatar: createOperatorAvatarSVG('#0284c7', '#e2e8f0', '#0369a1', 'FOX_EARS', 'HEADPHONE', '4★'),
+    quote: '少年兵的战斧，寒冰冻结。随身听里的音乐，是战场上唯一的平静。',
+    masterySkill: '凝冰之刃 (专三)',
+    moduleLevel: 3
+  },
+  // 124. 刻刀 (Cutter)
+  {
+    id: 'cutter',
+    name: 'Cutter',
+    cnName: '刻刀',
+    rarity: 4,
+    classType: 'Guard',
+    faction: 'Columbia',
+    color: '#dc2626',
+    avatar: createOperatorAvatarSVG('#dc2626', '#451a03', '#b91c1c', 'FOX_EARS', 'BLADE', '4★'),
+    quote: '双刀出鞘，红光闪过。四连斩击，敌人防线瞬息瓦解。',
+    masterySkill: '赤霄飞刃 (专三)',
+    moduleLevel: 3
+  },
+  // 125. 宴 (Utage)
+  {
+    id: 'utage',
+    name: 'Utage',
+    cnName: '宴',
+    rarity: 4,
+    classType: 'Guard',
+    faction: 'Higashi',
+    color: '#db2777',
+    avatar: createOperatorAvatarSVG('#db2777', '#fbcfe8', '#be185d', 'HUMAN', '', '4★'),
+    quote: '血量越少攻击越狂暴！鵺的妖刀出鞘，切开一切烦恼！',
+    masterySkill: '落地生根 (专三)',
+    moduleLevel: 3
+  },
+  // 126. 芳汀 (Arene)
+  {
+    id: 'arene',
+    name: 'Arene',
+    cnName: '芳汀',
+    rarity: 4,
+    classType: 'Guard',
+    faction: 'Laterano',
+    color: '#6366f1',
+    avatar: createOperatorAvatarSVG('#6366f1', '#e0e7ff', '#4f46e5', 'HUMAN', 'HALO', '4★'),
+    quote: '萨科塔的法术剑刃。不管是地面的重甲还是空中的无人机，一斩即碎。',
+    masterySkill: '致命打击 (专三)',
+    moduleLevel: 3
+  },
+  // 127. 罗小黑 (Luo Xiaohei)
+  {
+    id: 'luo_xiaohei',
+    name: 'Luo Xiaohei',
+    cnName: '罗小黑',
+    rarity: 4,
+    classType: 'Guard',
+    faction: 'Rhodes Island',
+    color: '#10b981',
+    avatar: createOperatorAvatarSVG('#10b981', '#0f172a', '#34d399', 'CAT_EARS', '', '4★'),
+    quote: '喵～尾巴变成嘿咻！空间领域展开，保护博士！',
+    masterySkill: '嘿咻领域 (专三)',
+    moduleLevel: 3
+  },
+
+  // ===== 经典五星核心干员 (5★ Core Operators) =====
+  // 128. 蓝毒 (Blue Poison)
+  {
+    id: 'blue_poison',
+    name: 'Blue Poison',
+    cnName: '蓝毒',
+    rarity: 5,
+    classType: 'Sniper',
+    faction: 'Rhodes Island',
+    color: '#06b6d4',
+    avatar: createOperatorAvatarSVG('#06b6d4', '#bae6fd', '#0891b2', 'FISH_FIN', '', '5★'),
+    quote: '毒液淬炼的箭矢……博士，我亲手烤的蓝莓蛋糕，您愿意尝一口吗？',
+    masterySkill: '毒液散射 (专三)',
+    moduleLevel: 3
+  },
+  // 129. 白金 (Platinum)
+  {
+    id: 'platinum',
+    name: 'Platinum',
+    cnName: '白金',
+    rarity: 5,
+    classType: 'Sniper',
+    faction: 'Kazimierz',
+    color: '#38bdf8',
+    avatar: createOperatorAvatarSVG('#38bdf8', '#f8fafc', '#0284c7', 'PEGASUS_EARS', 'BOW', '5★'),
+    quote: '无胄盟天马大弓，蓄力完毕。今天也可以准时打卡下班了吗？',
+    masterySkill: '天马视界 (专三)',
+    moduleLevel: 3
+  },
+  // 130. 陨星 (Meteorite)
+  {
+    id: 'meteorite',
+    name: 'Meteorite',
+    cnName: '陨星',
+    rarity: 5,
+    classType: 'Sniper',
+    faction: 'Rhodes Island',
+    color: '#dc2626',
+    avatar: createOperatorAvatarSVG('#dc2626', '#334155', '#ef4444', 'DEVIL_HORNS', '', '5★'),
+    quote: '高爆榴弹装填！大范围火力覆盖，硝烟弥漫即是敌人的丧钟。',
+    masterySkill: '高爆弹头 (专三)',
+    moduleLevel: 3
+  },
+  // 131. 临光 (Nearl 原版耀骑士重装)
+  {
+    id: 'nearl_defender',
+    name: 'Nearl',
+    cnName: '临光',
+    rarity: 5,
+    classType: 'Defender',
+    faction: 'Kazimierz',
+    color: '#eab308',
+    avatar: createOperatorAvatarSVG('#eab308', '#fef08a', '#ca8a04', 'PEGASUS_EARS', 'SHIELD', '5★'),
+    quote: '卡西米尔的耀骑士临光在此！以黄金之光庇护全阵线！',
+    masterySkill: '急救守护 (专三)',
+    moduleLevel: 3
+  },
+  // 132. 雷蛇 (Liskarm)
+  {
+    id: 'liskarm',
+    name: 'Liskarm',
+    cnName: '雷蛇',
+    rarity: 5,
+    classType: 'Defender',
+    faction: 'Columbia',
+    color: '#3b82f6',
+    avatar: createOperatorAvatarSVG('#3b82f6', '#475569', '#60a5fa', 'DRAGON_HORNS', '', '5★'),
+    quote: '黑钢国际雷蛇。战术防暴盾受击充电，为身旁队友源源不断充能！',
+    masterySkill: '反击电弧 (专三)',
+    moduleLevel: 3
+  },
+  // 133. 华法琳 (Warfarin)
+  {
+    id: 'warfarin',
+    name: 'Warfarin',
+    cnName: '华法琳',
+    rarity: 5,
+    classType: 'Medic',
+    faction: 'Rhodes Island',
+    color: '#dc2626',
+    avatar: createOperatorAvatarSVG('#dc2626', '#f1f5f9', '#dc2626', 'DEVIL_HORNS', 'SYRINGE', '5★'),
+    quote: '博士的血液……真是极品诱人。不稳定血浆注入，战力狂暴飙升！',
+    masterySkill: '不稳定血浆 (专三)',
+    moduleLevel: 3
+  },
+  // 134. 赫默 (Silence 原版医疗)
+  {
+    id: 'silence_medic',
+    name: 'Silence',
+    cnName: '赫默',
+    rarity: 5,
+    classType: 'Medic',
+    faction: 'Rhine Lab',
+    color: '#0891b2',
+    avatar: createOperatorAvatarSVG('#0891b2', '#f8fafc', '#0e7490', 'FEATHER_EARS', 'GLASSES', '5★'),
+    quote: '莱茵生命医疗无人机已部署至目标区域，远程急救覆盖完毕。',
+    masterySkill: '医疗无人机 (专三)',
+    moduleLevel: 3
+  },
+  // 135. 巫恋 (Shamane)
+  {
+    id: 'shamane',
+    name: 'Shamane',
+    cnName: '巫恋',
+    rarity: 5,
+    classType: 'Supporter',
+    faction: 'Siracusa',
+    color: '#9333ea',
+    avatar: createOperatorAvatarSVG('#9333ea', '#581c87', '#c084fc', 'FOX_EARS', '', '5★'),
+    quote: '小莫提，抱抱～诅咒娃娃降临之处，敌人的护甲与攻击尽数崩溃。',
+    masterySkill: '诅咒娃娃 (专三)',
+    moduleLevel: 3
+  },
+  // 136. 狮蝎 (Manticore)
+  {
+    id: 'manticore',
+    name: 'Manticore',
+    cnName: '狮蝎',
+    rarity: 5,
+    classType: 'Specialist',
+    faction: 'Rhodes Island',
+    color: '#6366f1',
+    avatar: createOperatorAvatarSVG('#6366f1', '#4338ca', '#818cf8', 'DEVIL_HORNS', '', '5★'),
+    quote: '隐身蝎刺……博士，我不是故意吓您的……只是不想被别人看见……',
+    masterySkill: '蓄力毒刺 (专三)',
+    moduleLevel: 3
+  },
+  // 137. 食铁兽 (FEater)
+  {
+    id: 'feater',
+    name: 'FEater',
+    cnName: '食铁兽',
+    rarity: 5,
+    classType: 'Specialist',
+    faction: 'Lungmen',
+    color: '#059669',
+    avatar: createOperatorAvatarSVG('#059669', '#1e293b', '#10b981', 'BEAR_EARS', 'GLASSES', '5★'),
+    quote: '功夫电影主角登场！崩拳寸劲，一掌把大盾哥轰下悬崖！',
+    masterySkill: '铁意六合拳 (专三)',
+    moduleLevel: 3
+  },
+  // 138. 羽毛笔 (La Pluma)
+  {
+    id: 'la_pluma',
+    name: 'La Pluma',
+    cnName: '羽毛笔',
+    rarity: 5,
+    classType: 'Guard',
+    faction: 'Bolivar',
+    color: '#0284c7',
+    avatar: createOperatorAvatarSVG('#0284c7', '#38bdf8', '#0284c7', 'FEATHER_EARS', '', '5★'),
+    quote: '巨大的死神镰刀挥舞，收割一切！攻速叠加，势不可挡！',
+    masterySkill: '收割风暴 (专三)',
+    moduleLevel: 3
+  },
+  // 139. 龙舌兰 (Tequila)
+  {
+    id: 'tequila',
+    name: 'Tequila',
+    cnName: '龙舌兰',
+    rarity: 5,
+    classType: 'Guard',
+    faction: 'Bolivar',
+    color: '#d97706',
+    avatar: createOperatorAvatarSVG('#d97706', '#fed7aa', '#b45309', 'DOG_EARS', 'BLADE', '5★'),
+    quote: '解放者拔刀术！蓄能完毕，一剑破万甲！',
+    masterySkill: '剑鞘裂斩 (专三)',
+    moduleLevel: 3
+  },
+  // 140. 晓歌 (Cantabile)
+  {
+    id: 'cantabile',
+    name: 'Cantabile',
+    cnName: '晓歌',
+    rarity: 5,
+    classType: 'Vanguard',
+    faction: 'Bolivar',
+    color: '#0d9488',
+    avatar: createOperatorAvatarSVG('#0d9488', '#ccfbf1', '#0f766e', 'FEATHER_EARS', 'BOW', '5★'),
+    quote: '谍影特勤，暗夜迅捷。射箭回收部署费用，随时重返战场。',
+    masterySkill: '暗影箭影 (专三)',
+    moduleLevel: 3
+  },
+  // 141. 蜜莓 (Honeyberry)
+  {
+    id: 'honeyberry',
+    name: 'Honeyberry',
+    cnName: '蜜莓',
+    rarity: 5,
+    classType: 'Medic',
+    faction: 'Rim Billiton',
+    color: '#f43f5e',
+    avatar: createOperatorAvatarSVG('#f43f5e', '#fed7aa', '#e11d48', 'BUNNY_EARS', 'APPLES', '5★'),
+    quote: '野果蜜汁调制的元素药剂！侵蚀与神经损伤，通通消散！',
+    masterySkill: '甘露抚慰 (专三)',
+    moduleLevel: 3
+  },
+  // 142. 桑葚 (Mulberry)
+  {
+    id: 'mulberry',
+    name: 'Mulberry',
+    cnName: '桑葚',
+    rarity: 5,
+    classType: 'Medic',
+    faction: 'Yan',
+    color: '#84cc16',
+    avatar: createOperatorAvatarSVG('#84cc16', '#ecfccb', '#65a30d', 'FEATHER_EARS', 'LANTERN', '5★'),
+    quote: '大炎司岁台行脚医。青灯摇曳，抚平一切紊乱与灼热。',
+    masterySkill: '素心清露 (专三)',
+    moduleLevel: 3
+  },
+  // 143. 火龙S黑角 (Rathalos S Noir Corne)
+  {
+    id: 'noir_corne_alter',
+    name: 'Rathalos S Noir Corne',
+    cnName: '火龙S黑角',
+    rarity: 5,
+    classType: 'Guard',
+    faction: 'Monster Hunter',
+    color: '#dc2626',
+    avatar: createOperatorAvatarSVG('#dc2626', '#1e293b', '#ef4444', 'DEVIL_HORNS', 'BLADE', 'MH'),
+    quote: '太刀气刃兜割！火龙防具赋予的力量，必斩破一切凶兽！',
+    masterySkill: '居合拔刀气刃斩 (专三)',
+    moduleLevel: 3
+  },
+
+  // ===== 更多高人气六星战神干员 (Iconic 6★ Operators) =====
+  // 144. 嵯峨 (Saga)
+  {
+    id: 'saga',
+    name: 'Saga',
+    cnName: '嵯峨',
+    rarity: 6,
+    classType: 'Vanguard',
+    faction: 'Higashi',
+    color: '#ca8a04',
+    avatar: createOperatorAvatarSVG('#ca8a04', '#1e293b', '#a16207', 'DOG_EARS', 'BELL', '6★'),
+    quote: '六根清净！纳豆拌饭真香啊！怒目圆睁，斩杀留一滴血让队友充能！',
+    masterySkill: '怒目圆睁 (专三)',
+    moduleLevel: 3
+  },
+  // 151. 娜仁图亚 (Narantuya)
+  {
+    id: 'narantuya',
+    name: 'Narantuya',
+    cnName: '娜仁图亚',
+    rarity: 6,
+    classType: 'Sniper',
+    faction: 'Yan',
+    color: '#10b981',
+    avatar: createOperatorAvatarSVG('#10b981', '#1e293b', '#059669', 'HORNS', 'BOW', '6★'),
+    quote: '长生天的风吹拂草原。破风鸣镝，贯穿一切阴谋与阴霾！',
+    masterySkill: '破风裂空 (专三)',
+    moduleLevel: 3
+  },
+  // 152. 卡涅利安 (Carnelian)
+  {
+    id: 'carnelian',
+    name: 'Carnelian',
+    cnName: '卡涅利安',
+    rarity: 6,
+    classType: 'Caster',
+    faction: 'Leithanien',
+    color: '#c2410c',
+    avatar: createOperatorAvatarSVG('#c2410c', '#fed7aa', '#9a3412', 'SHEEP_HORNS', '', '6★'),
+    quote: '荒野狂沙漫卷！沙尘暴蓄力轰击，食肉之沙吞噬一切进犯之敌。',
+    masterySkill: '食肉之沙 (专三)',
+    moduleLevel: 3
+  },
+  // 153. 帕拉斯 (Pallas)
+  {
+    id: 'pallas',
+    name: 'Pallas',
+    cnName: '帕拉斯',
+    rarity: 6,
+    classType: 'Guard',
+    faction: 'Minos',
+    color: '#ca8a04',
+    avatar: createOperatorAvatarSVG('#ca8a04', '#fed7aa', '#a16207', 'SHEEP_HORNS', '', '6★'),
+    quote: '胜利女神之冠！米诺斯圣泉指引，只要身处战线前排，鼓舞全军战意！',
+    masterySkill: '信念的传承 (专三)',
+    moduleLevel: 3
+  },
+  // 154. 伺夜 (Vigil)
+  {
+    id: 'vigil',
+    name: 'Vigil',
+    cnName: '伺夜',
+    rarity: 6,
+    classType: 'Vanguard',
+    faction: 'Siracusa',
+    color: '#475569',
+    avatar: createOperatorAvatarSVG('#475569', '#1e293b', '#64748b', 'WOLF_EARS', 'BLADE', '6★'),
+    quote: '贝洛内家族的狼群随时听令。黑夜的叙拉古，由领袖的裁决来书写。',
+    masterySkill: '首领的意志 (专三)',
+    moduleLevel: 3
+  },
+  // 155. 麒麟R夜刀 (Kirin R Yato)
+  {
+    id: 'kirin_yato',
+    name: 'Kirin R Yato',
+    cnName: '麒麟R夜刀',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'Monster Hunter',
+    color: '#06b6d4',
+    avatar: createOperatorAvatarSVG('#06b6d4', '#f8fafc', '#0891b2', 'DEVIL_HORNS', 'BLADE', 'MH'),
+    quote: '双剑鬼人化！雷光极速乱舞，零死角贯穿战场！',
+    masterySkill: '乱舞·绝 (专三)',
+    moduleLevel: 3
+  },
+
+  // ===== 补全六星全图鉴干员 (Complete Official 6★ Operator Collection) =====
+  // 156. 赫拉格 (Hellagur)
+  {
+    id: 'hellagur',
+    name: 'Hellagur',
+    cnName: '赫拉格',
+    rarity: 6,
+    classType: 'Guard',
+    faction: 'Ursus',
+    color: '#64748b',
+    avatar: createOperatorAvatarSVG('#64748b', '#f8fafc', '#94a3b8', 'FEATHER_EARS', 'BLADE', '6★'),
+    quote: '昔日切尔诺伯格将领赫拉格。老兵未死，残躯尚可为后辈挥刃断前路。',
+    masterySkill: '满月 (专三)',
+    moduleLevel: 3
+  },
+  // 157. 森蚺 (Eunectes)
+  {
+    id: 'eunectes',
+    name: 'Eunectes',
+    cnName: '森蚺',
+    rarity: 6,
+    classType: 'Defender',
+    faction: 'Sargon',
+    color: '#059669',
+    avatar: createOperatorAvatarSVG('#059669', '#34d399', '#065f46', 'SNAKE_WINGS', '', '6★'),
+    quote: '机械的巨足轰鸣，“大丑”启动！博士，我和高阶祭司会为你扫平所有阻碍！',
+    masterySkill: '钢铁意志 (专三)',
+    moduleLevel: 3
+  },
+  // 158. W (W)
+  {
+    id: 'w_original',
+    name: 'W',
+    cnName: 'W',
+    rarity: 6,
+    classType: 'Sniper',
+    faction: 'Babel',
+    color: '#dc2626',
+    avatar: createOperatorAvatarSVG('#dc2626', '#fca5a5', '#991b1b', 'DEVIL_HORNS', '', '6★'),
+    quote: '嘀嗒嘀嗒……倒计时结束！boom！哈哈，博士，你这副认真的表情真是有趣。',
+    masterySkill: 'D12 (专三)',
+    moduleLevel: 3
+  },
+  // 159. 老鲤 (Lee)
+  {
+    id: 'lee',
+    name: 'Lee',
+    cnName: '老鲤',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'Lungmen',
+    color: '#0d9488',
+    avatar: createOperatorAvatarSVG('#0d9488', '#5eead4', '#134e4a', 'DRAGON_HORNS', '', '6★'),
+    quote: '鲤氏侦探事务所老鲤。算卦解签、破煞除厄，凡事讲究一个以和为贵。',
+    masterySkill: '贵客盈门 (专三)',
+    moduleLevel: 3
+  },
+  // 160. 百炼嘉维尔 (Gavial the Invincible)
+  {
+    id: 'gavial_alter',
+    name: 'Gavial the Invincible',
+    cnName: '百炼嘉维尔',
+    rarity: 6,
+    classType: 'Guard',
+    faction: 'Rhodes Island',
+    color: '#16a34a',
+    avatar: createOperatorAvatarSVG('#16a34a', '#86efac', '#14532d', 'DRAGON_HORNS', 'BLADE', '6★'),
+    quote: '法杖？那种东西哪有拳头和重械顺手！阿达克利斯的猛女在此，统统给我趴下！',
+    masterySkill: '丛林之拳 (专三)',
+    moduleLevel: 3
+  },
+  // 161. 林 (Lin)
+  {
+    id: 'lin',
+    name: 'Lin',
+    cnName: '林',
+    rarity: 6,
+    classType: 'Caster',
+    faction: 'Lungmen',
+    color: '#7c3aed',
+    avatar: createOperatorAvatarSVG('#7c3aed', '#c4b5fd', '#5b21b6', 'JERBOA_EARS', '', '6★'),
+    quote: '琉璃破碎之时，即是裁决降临之刻。龙门的阴影与秩序，由我维系。',
+    masterySkill: '流沙奔涌 (专三)',
+    moduleLevel: 3
+  },
+  // 162. 魔王 (Civilight Eterna)
+  {
+    id: 'civilight_eterna',
+    name: 'Civilight Eterna',
+    cnName: '魔王',
+    rarity: 6,
+    classType: 'Supporter',
+    faction: 'Babel',
+    color: '#d946ef',
+    avatar: createOperatorAvatarSVG('#d946ef', '#f0abfc', '#86198f', 'SARKAZ_CROWN', '', '6★'),
+    quote: '萨卡兹千年的宿命与悲愿，尽在王冠的脉动之中。愿前路不再有泪水与战火。',
+    masterySkill: '昔日王庭的悲歌 (专三)',
+    moduleLevel: 3
+  },
+  // 163. 维娜·维多利亚 (Vina Victoria)
+  {
+    id: 'vina_victoria',
+    name: 'Vina Victoria',
+    cnName: '维娜·维多利亚',
+    rarity: 6,
+    classType: 'Guard',
+    faction: 'Victoria',
+    color: '#ca8a04',
+    avatar: createOperatorAvatarSVG('#ca8a04', '#fef08a', '#854d0e', 'LION_EARS', 'BLADE', '6★'),
+    quote: '执掌狮心王权，拔出石中之剑！伦蒂尼姆由我收复，维多利亚必将黎明再临！',
+    masterySkill: '开国王者之怒 (专三)',
+    moduleLevel: 3
+  },
+  // 164. 忍冬 (Honeysuckle)
+  {
+    id: 'honeysuckle',
+    name: 'Honeysuckle',
+    cnName: '忍冬',
+    rarity: 6,
+    classType: 'Vanguard',
+    faction: 'Rhodes Island',
+    color: '#10b981',
+    avatar: createOperatorAvatarSVG('#10b981', '#6ee7b7', '#064e3b', 'CAT_EARS', '', '6★'),
+    quote: '潜行回费，瞬影隐匿！尖兵先锋忍冬，前线视野与战术点位均已部署完毕！',
+    masterySkill: '花影匿杀 (专三)',
+    moduleLevel: 3
+  },
+  // 165. 玛露希尔 (Marcille)
+  {
+    id: 'marcille',
+    name: 'Marcille',
+    cnName: '玛露希尔',
+    rarity: 6,
+    classType: 'Caster',
+    faction: 'Dungeon Meshi',
+    color: '#eab308',
+    avatar: createOperatorAvatarSVG('#eab308', '#fef9c3', '#a16207', 'ELF_EARS', '', '6★'),
+    quote: '等等！莱欧斯你又要煮什么魔物？！……算了，古代高等黑魔法，全弹发射！',
+    masterySkill: '古代爆炎巨咒 (专三)',
+    moduleLevel: 3
+  },
+  // 166. 引星棘刺 (Thorns the Lodestar)
+  {
+    id: 'thorns_alter',
+    name: 'Thorns the Lodestar',
+    cnName: '引星棘刺',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'Iberia',
+    color: '#0284c7',
+    avatar: createOperatorAvatarSVG('#0284c7', '#7dd3fc', '#0369a1', 'FISH_FIN', 'BLADE', '6★'),
+    quote: '以星辰为引，刺穿深渊狂潮！至高之术已随星轨变幻，此击无可匹敌！',
+    masterySkill: '星芒织海 (专三)',
+    moduleLevel: 3
+  },
+  // 167. 余 (Yu)
+  {
+    id: 'yu',
+    name: 'Yu',
+    cnName: '余',
+    rarity: 6,
+    classType: 'Defender',
+    faction: 'Yan',
+    color: '#b45309',
+    avatar: createOperatorAvatarSVG('#b45309', '#fde68a', '#78350f', 'DRAGON_HORNS', '', '6★'),
+    quote: '天地乾坤，万象归余。岁家兄妹在此，任凭千军万马，休想撼动阵线分毫！',
+    masterySkill: '天元归聚 (专三)',
+    moduleLevel: 3
+  },
+  // 168. 娜斯提 (Nasty)
+  {
+    id: 'nasty',
+    name: 'Nasty',
+    cnName: '娜斯提',
+    rarity: 6,
+    classType: 'Supporter',
+    faction: 'Rhine Lab',
+    color: '#f97316',
+    avatar: createOperatorAvatarSVG('#f97316', '#fed7aa', '#c2410c', 'ROBOT_EARS', '', '6★'),
+    quote: '工匠大师娜斯提！无论在陆地还是高空，人造高台与结构强化立即就位！',
+    masterySkill: '天空构筑矩阵 (专三)',
+    moduleLevel: 3
+  },
+  // 169. 蕾缪安 (Lemuen)
+  {
+    id: 'lemuen',
+    name: 'Lemuen',
+    cnName: '蕾缪安',
+    rarity: 6,
+    classType: 'Sniper',
+    faction: 'Laterano',
+    color: '#06b6d4',
+    avatar: createOperatorAvatarSVG('#06b6d4', '#a5f3fc', '#0e7490', 'FEATHER_EARS', '', '6★'),
+    quote: '轮椅上的信使亦是神枪手。拉特兰的圣光庇佑每一发精准出膛的子弹。',
+    masterySkill: '天启铳骑鸣奏 (专三)',
+    moduleLevel: 3
+  },
+  // 170. 酒神 (Dionysus)
+  {
+    id: 'dionysus',
+    name: 'Dionysus',
+    cnName: '酒神',
+    rarity: 6,
+    classType: 'Supporter',
+    faction: 'Victoria',
+    color: '#8b5cf6',
+    avatar: createOperatorAvatarSVG('#8b5cf6', '#ddd6fe', '#6d28d9', 'CAT_EARS', '', '6★'),
+    quote: '猩红剧团帷幕拉开，沉醉于这无休止的神经狂乱吧！这出好戏，才刚刚开场。',
+    masterySkill: '狂欢戏剧幻幕 (专三)',
+    moduleLevel: 3
+  },
+  // 171. 隐德来希 (Entelechia)
+  {
+    id: 'entelechia',
+    name: 'Entelechia',
+    cnName: '隐德来希',
+    rarity: 6,
+    classType: 'Guard',
+    faction: 'Rhodes Island',
+    color: '#ef4444',
+    avatar: createOperatorAvatarSVG('#ef4444', '#fca5a5', '#b91c1c', 'SARKAZ_GHOST', '', '6★'),
+    quote: '收割者隐德来希。吸取生命上限，赋予法术创伤，战场即是我独行的圣殿。',
+    masterySkill: '灵魂断罪收割 (专三)',
+    moduleLevel: 3
+  },
+  // 172. Mon3tr (Mon3tr)
+  {
+    id: 'mon3tr_op',
+    name: 'Mon3tr',
+    cnName: 'Mon3tr',
+    rarity: 6,
+    classType: 'Medic',
+    faction: 'Rhodes Island',
+    color: '#10b981',
+    avatar: createOperatorAvatarSVG('#10b981', '#a7f3d0', '#047857', 'CRYSTAL_SPINE', '', '6★'),
+    quote: '（低沉的晶石共鸣与利爪破空声）脊椎延展出绝对的防护与治愈力场！',
+    masterySkill: '生物结晶超频 (专三)',
+    moduleLevel: 3
+  },
+  // 173. 新约能天使 (Exusiai the Revelation)
+  {
+    id: 'exusiai_alter',
+    name: 'Exusiai the Revelation',
+    cnName: '新约能天使',
+    rarity: 6,
+    classType: 'Sniper',
+    faction: 'Laterano',
+    color: '#f59e0b',
+    avatar: createOperatorAvatarSVG('#f59e0b', '#fde68a', '#b45309', 'FEATHER_EARS', '', '6★'),
+    quote: '老板！苹果派烤好啦！六管铳骑火力全开，圣光照耀罗德岛的每一步征途！',
+    masterySkill: '启示之光弹幕 (专三)',
+    moduleLevel: 3
+  },
+  // 174. 谬因 (Miu Yin)
+  {
+    id: 'miu_yin',
+    name: 'Miu Yin',
+    cnName: '谬因',
+    rarity: 6,
+    classType: 'Caster',
+    faction: 'Yan',
+    color: '#3b82f6',
+    avatar: createOperatorAvatarSVG('#3b82f6', '#93c5fd', '#1d4ed8', 'HORNS', '', '6★'),
+    quote: '以气御法，导流装置已延展攻击路径！炎国术法博大精深，请博士拭目以待。',
+    masterySkill: '气脉连环流导 (专三)',
+    moduleLevel: 3
+  },
+  // 175. 时隙 (Shi Xi)
+  {
+    id: 'shi_xi',
+    name: 'Shi Xi',
+    cnName: '时隙',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'Rhodes Island',
+    color: '#6366f1',
+    avatar: createOperatorAvatarSVG('#6366f1', '#c7d2fe', '#4338ca', 'ROBOT_EARS', '', '6★'),
+    quote: '通信信道校准完毕……浮游单元启动！虽然不太擅长言语，但我会守好网络防线。',
+    masterySkill: '浮游过载演算 (专三)',
+    moduleLevel: 3
+  },
+  // 176. 斩业星熊 (Hoshiguma the Resolute)
+  {
+    id: 'hoshiguma_alter',
+    name: 'Hoshiguma the Resolute',
+    cnName: '斩业星熊',
+    rarity: 6,
+    classType: 'Defender',
+    faction: 'Lungmen',
+    color: '#059669',
+    avatar: createOperatorAvatarSVG('#059669', '#a7f3d0', '#047857', 'HORNS', 'BLADE', '6★'),
+    quote: '般若刀锋，斩业不断！我执不灭，龙门坚不可摧的壁垒再次挺身而出！',
+    masterySkill: '般若绝断断业 (专三)',
+    moduleLevel: 3
+  },
+
+  // ===== 泰拉动物萌宠与传奇领袖专区 (Legendary Animal Operators) =====
+  // 177. 大帝 (Emperor)
+  {
+    id: 'emperor',
+    name: 'Emperor',
+    cnName: '大帝',
+    rarity: 6,
+    classType: 'Specialist',
+    faction: 'Penguin Logistics',
+    color: '#f59e0b',
+    avatar: createEmperorAvatarSVG(),
+    quote: 'Drop the beat! 企鹅物流是不可战胜的！把音响开到最大，全场跟着本大爷嗨起来！',
+    masterySkill: '不可阻挡的说唱狂潮 (专三)',
+    moduleLevel: 3
+  },
+  // 157. 鸭爵 (Duck Lord)
+  {
+    id: 'duck_lord',
+    name: 'Duck Lord',
+    cnName: '鸭爵',
+    rarity: 5,
+    classType: 'Specialist',
+    faction: 'Independent',
+    color: '#a855f7',
+    avatar: createDuckLordAvatarSVG(),
+    quote: '嘎哈哈！想要源石锭和珍宝吗？那就凭你的本事在迷宫里追上我吧！',
+    masterySkill: '怪盗金蝉脱壳 (专三)',
+    moduleLevel: 3
+  },
+  // 158. 大祭司 (High Priest)
+  {
+    id: 'high_priest',
+    name: 'High Priest',
+    cnName: '大祭司',
+    rarity: 1,
+    classType: 'Supporter',
+    faction: 'Sargon',
+    color: '#10b981',
+    avatar: createHighPriestAvatarSVG(),
+    quote: '愚蠢的凡人！竟敢将本神视为普通羽兽？雨林的怒火与金刚鹦鹉的神威，可容不得你置喙！',
+    masterySkill: '神鸟的智慧 (满潜)',
+    moduleLevel: 1
   }
 ];
 
@@ -1677,6 +3249,39 @@ export const PROMPT_PRESETS: PromptTemplate[] = [
     operators: ['Ulpian', 'Gladiia', 'Skadi Alter', 'Specter Alter', 'Thorns'],
     prompt: `A 2x2 grid of chibi Arknights Abyssal Hunters: Ulpian holding heavy anchor, Gladiia with swordfish hat, Skadi holding a cute plush orca, and Specter spinning a toy buzzsaw with dizzy cute eyes. High contrast, clean vector style, super kawaii SD proportions, isolated on pure white background, distinct margins between 4 characters`,
     negativePrompt: `photorealistic, complex scenery, overlapping, dark borders`,
+    params: `--ar 1:1 --v 6.1`
+  },
+  {
+    id: 'p3r_collab',
+    title: '女神异闻录3 Reload 联动特勤组 (P3R x Arknights 2x2)',
+    description: '结城理召唤弥赛亚、埃癸斯机关重炮、岳羽由加莉疾风箭、虎狼丸叼短刃',
+    tag: '2x2 P3R 联动 🔥',
+    gridSize: '2x2',
+    operators: ['Makoto Yuki', 'Aigis', 'Yukari Takeba', 'Koromaru'],
+    prompt: `A 2x2 grid sticker sheet of Persona 3 Reload x Arknights collaboration chibi operators: Makoto Yuki holding Evoker pistol with blue Orpheus Persona summon aura and earphones, Aigis the cute blonde android girl with red ribbon headband firing mini Gatling gun, Yukari Takeba with stylish high school archer outfit drawing pink wind bow, and Koromaru the cute loyal white Shiba Inu dog holding a combat dagger in mouth with S.E.E.S. red armband. Modern Persona 3 stylish cobalt blue and neon accents, clean chibi anime sticker aesthetics, crisp outlines, isolated on pure white background, 4 evenly separated quadrants, perfect for sticker cutout`,
+    negativePrompt: `blurry, low resolution, messy grid, overlapping characters, dark background, 3D render`,
+    params: `--ar 1:1 --v 6.1 --style raw`
+  },
+  {
+    id: 'four_star_heroes',
+    title: '基建与开荒战神组 (4★ Heroes 3x3)',
+    description: '桃金娘摇白旗举金苹果、孑哥切生鱼片、龟龟四阻挡、红豆长矛冲锋',
+    tag: '3x3 四星战神',
+    gridSize: '3x3',
+    operators: ['Myrtle', 'Jaye', 'Cuora', 'Gravel', 'Gummy', 'Shirayuki', 'May', 'Perfumer', 'Shaw'],
+    prompt: `A 3x3 grid sticker sheet of beloved Arknights 4-star hero operators: Myrtle holding a white surrender flag and glowing golden apple, Jaye the sushi chef holding sashimi knives, Cuora the baseball turtle girl with shell backpack, Gravel with cute rat tail and shield, Gummy holding a frying pan, Shirayuki with giant ninja star, May the detective duck, Perfumer with lavender flowers, and Shaw the fire squirrel holding water hose. Super cute SD proportions, vibrant flat colors, crisp 2D lineart, pure white background, evenly spaced sticker grid layout`,
+    negativePrompt: `blurry, photorealistic, complex background, bad anatomy`,
+    params: `--ar 1:1 --v 6.1`
+  },
+  {
+    id: 'animal_legends',
+    title: '泰拉传奇萌宠与动物名宿 (Terra Animals 2x2)',
+    description: '虎狼丸叼短刃白柴、大帝墨镜金链雪茄皇帝企鹅、鸭爵绅士高顶礼帽金单片镜、大祭司神鸟金刚鹦鹉',
+    tag: '2x2 动物特勤 🐾',
+    gridSize: '2x2',
+    operators: ['Koromaru', 'Emperor', 'Duck Lord', 'High Priest'],
+    prompt: `A 2x2 grid sticker sheet of beloved non-human animal operators and legends from Arknights and P3R: top-left Koromaru the cute loyal white Shiba Inu dog biting combat dagger in mouth with S.E.E.S. red armband; top-right Emperor the badass emperor penguin boss wearing black sunglasses and heavy gold chain smoking cigar; bottom-left Duck Lord the yellow gentleman duck wearing tall black Victorian silk top hat with gold monocle and red bowtie; bottom-right High Priest the arrogant colorful scarlet macaw god parrot with tribal feather crest. Super cute chibi SD cartoon anime aesthetics, bold outlines, vibrant colors, isolated on pure white background, 4 evenly separated quadrants, perfect for sticker die-cut`,
+    negativePrompt: `human face, photorealistic, 3D render, dark messy background, overlapping characters`,
     params: `--ar 1:1 --v 6.1`
   }
 ];

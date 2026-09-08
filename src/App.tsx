@@ -6,6 +6,7 @@ import { CommsLogModal } from './components/CommsLogModal';
 import { DoctorDetailModal } from './components/DoctorDetailModal';
 import { MyProfileModal } from './components/MyProfileModal';
 import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { FriendLinksModal } from './components/FriendLinksModal';
 import { DoctorProfile, RadarFilter, TacticalInteraction, LightPresence } from './types';
 import { OPERATOR_DATABASE } from './data/operators';
 import { TACTICAL_HOTSPOTS, applyJitter, wgs84ToGcj02, calculateDistance } from './utils/geoutils';
@@ -200,6 +201,7 @@ export default function App() {
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorProfile | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [isFriendLinksModalOpen, setIsFriendLinksModalOpen] = useState(false);
 
   // -----------------------------------------------------------------------
   // Location
@@ -1029,9 +1031,18 @@ export default function App() {
       )}
 
       {isPrivacyOpen && <PrivacyPolicyModal onClose={() => setIsPrivacyOpen(false)} />}
+      {isFriendLinksModalOpen && (
+        <FriendLinksModal isOpen={isFriendLinksModalOpen} onClose={() => setIsFriendLinksModalOpen(false)} />
+      )}
 
       <footer className="w-full border-t border-slate-800/80 bg-[#0a0e13]/95 px-3 py-1.5 flex items-center justify-center gap-4 text-[10px] text-slate-500 font-mono">
         <span>PRTS 战术雷达 · 非商业同人项目</span>
+        <button
+          onClick={() => setIsFriendLinksModalOpen(true)}
+          className="text-slate-400 hover:text-[#00e5ff] underline underline-offset-2 transition-colors"
+        >
+          友情链接
+        </button>
         <button
           onClick={() => setIsPrivacyOpen(true)}
           className="text-slate-400 hover:text-[#00e5ff] underline underline-offset-2 transition-colors"
