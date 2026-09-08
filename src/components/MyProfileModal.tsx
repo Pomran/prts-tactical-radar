@@ -50,18 +50,38 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
   // Operator filter & search state
   const [operatorSearch, setOperatorSearch] = useState('');
   const [selectedClass, setSelectedClass] = useState<OperatorClass | 'ALL'>('ALL');
+  const [selectedRarity, setSelectedRarity] = useState<'ALL' | 'P3R' | 6 | 5 | 4 | 1>('ALL');
 
   const filteredOperators = useMemo(() => {
     return OPERATOR_DATABASE.filter(op => {
       const matchClass = selectedClass === 'ALL' || op.classType === selectedClass;
+      
+      const matchRarity = 
+        selectedRarity === 'ALL' 
+          ? true 
+          : selectedRarity === 'P3R'
+          ? op.faction === 'S.E.E.S.'
+          : op.rarity === selectedRarity;
+
+      const q = operatorSearch.trim().toLowerCase();
+
       const matchQuery = 
-        !operatorSearch.trim() || 
-        op.cnName.toLowerCase().includes(operatorSearch.toLowerCase()) || 
-        op.name.toLowerCase().includes(operatorSearch.toLowerCase()) ||
-        op.faction.toLowerCase().includes(operatorSearch.toLowerCase());
-      return matchClass && matchQuery;
+        !q || 
+        op.cnName.toLowerCase().includes(q) || 
+        op.name.toLowerCase().includes(q) ||
+        op.faction.toLowerCase().includes(q) ||
+        (q === 'p3r' && op.faction === 'S.E.E.S.') ||
+        (q === 'sees' && op.faction === 'S.E.E.S.') ||
+        (q === '联动' && (op.faction === 'S.E.E.S.' || op.faction === 'Monster Hunter')) ||
+        (q.includes('6') && op.rarity === 6) ||
+        (q.includes('5') && op.rarity === 5) ||
+        (q.includes('4') && op.rarity === 4) ||
+        (q.includes('1') && op.rarity === 1) ||
+        (q.includes('一星') && op.rarity === 1);
+
+      return matchClass && matchRarity && matchQuery;
     });
-  }, [operatorSearch, selectedClass]);
+  }, [operatorSearch, selectedClass, selectedRarity]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,14 +148,27 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                 className="w-12 h-12 rounded-full border border-[#00e5ff] shadow-[0_0_10px_rgba(0,229,255,0.4)]"
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-sm font-bold text-white tracking-wide">{selectedAssistant.cnName}</span>
                   <span className="text-[10px] text-slate-400 font-mono">({selectedAssistant.name})</span>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
+                    selectedAssistant.rarity === 6 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                    selectedAssistant.rarity === 5 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/40' :
+                    selectedAssistant.rarity === 4 ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
+                    selectedAssistant.rarity === 1 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                    'bg-slate-500/20 text-slate-300 border border-slate-500/40'
+                  }`}>
+                    {selectedAssistant.rarity}★
+                  </span>
                   <span className="text-[9px] px-1.5 py-0.2 bg-[#00e5ff]/15 text-[#00e5ff] border border-[#00e5ff]/40 rounded">
                     {selectedAssistant.classType}
                   </span>
-                  <span className="text-[9px] px-1.5 py-0.2 bg-slate-800 text-slate-300 rounded border border-slate-700">
-                    {selectedAssistant.faction}
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded border ${
+                    selectedAssistant.faction === 'S.E.E.S.' 
+                      ? 'bg-blue-600/30 text-sky-300 border-sky-400 font-bold shadow-[0_0_8px_rgba(2,132,199,0.5)]'
+                      : 'bg-slate-800 text-slate-300 border-slate-700'
+                  }`}>
+                    {selectedAssistant.faction === 'S.E.E.S.' ? '🔥 P3R · S.E.E.S.' : selectedAssistant.faction}
                   </span>
                 </div>
                 <div className="text-[10px] text-slate-300 mt-1 italic flex items-center gap-1 truncate">
@@ -145,13 +178,46 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
               </div>
             </div>
 
+            {/* Rarity and Special Event Filter Tabs */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[10px]">
+              <span className="text-slate-400 shrink-0 text-[10px] font-bold mr-1">星级筛选:</span>
+              {(['ALL', 'P3R', 6, 5, 4, 1] as const).map(rarityOption => (
+                <button
+                  type="button"
+                  key={String(rarityOption)}
+                  onClick={() => {
+                    prtsAudio.playClick();
+                    setSelectedRarity(rarityOption);
+                  }}
+                  className={`px-2 py-0.5 rounded transition-all whitespace-nowrap text-[10px] ${
+                    selectedRarity === rarityOption
+                      ? rarityOption === 'P3R'
+                        ? 'bg-sky-500 text-slate-950 font-bold shadow-[0_0_8px_rgba(14,165,233,0.6)]'
+                        : rarityOption === 1
+                        ? 'bg-emerald-400 text-slate-950 font-bold'
+                        : 'bg-amber-400 text-slate-950 font-bold'
+                      : rarityOption === 'P3R'
+                        ? 'bg-sky-950/70 text-sky-300 border border-sky-600 hover:bg-sky-900/60'
+                        : 'bg-slate-800/90 text-slate-400 hover:text-slate-200 border border-slate-700'
+                  }`}
+                >
+                  {rarityOption === 'ALL' ? `全部 (${OPERATOR_DATABASE.length})` :
+                   rarityOption === 'P3R' ? '🔥 P3R联动 (4)' :
+                   rarityOption === 6 ? `6★ 六星 (${OPERATOR_DATABASE.filter(o => o.rarity === 6).length})` :
+                   rarityOption === 5 ? `5★ 五星 (${OPERATOR_DATABASE.filter(o => o.rarity === 5).length})` :
+                   rarityOption === 4 ? `4★ 四星 (${OPERATOR_DATABASE.filter(o => o.rarity === 4).length})` : 
+                   `1★ 一星 (${OPERATOR_DATABASE.filter(o => o.rarity === 1).length})`}
+                </button>
+              ))}
+            </div>
+
             {/* Search & Class Filter */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
               <div className="relative flex-1">
                 <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="搜索干员姓名 / 英文 / 阵营 (例如 维什戴尔, 临光, 岁...)"
+                  placeholder="搜索干员姓名 / 英文 / 阵营 (例如 阿米娅, 结城理, 桃金娘, 维什戴尔, p3r...)"
                   value={operatorSearch}
                   onChange={(e) => setOperatorSearch(e.target.value)}
                   className="w-full bg-[#0a0f16] border border-slate-700 text-slate-100 rounded pl-7 pr-2 py-1 text-[11px] focus:border-[#00e5ff] outline-none"
@@ -172,7 +238,7 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                         : 'bg-slate-800/80 text-slate-400 hover:text-slate-200 border border-slate-700'
                     }`}
                   >
-                    {cls === 'ALL' ? '全部' : 
+                    {cls === 'ALL' ? '全部职阶' : 
                      cls === 'Guard' ? '近卫' :
                      cls === 'Caster' ? '术士' :
                      cls === 'Sniper' ? '狙击' :
@@ -186,7 +252,7 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
             </div>
 
             {/* Operator Grid List */}
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1 max-h-44 overflow-y-auto pr-1">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 pt-1 max-h-48 overflow-y-auto pr-1">
               {filteredOperators.map((op) => (
                 <button
                   type="button"
@@ -195,13 +261,19 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                     prtsAudio.playClick();
                     setSelectedAssistant(op);
                   }}
-                  className={`p-1.5 rounded border flex flex-col items-center gap-1 transition-all group ${
+                  className={`p-1.5 rounded border flex flex-col items-center gap-1 transition-all group relative ${
                     selectedAssistant.id === op.id
                       ? 'bg-[#00e5ff]/20 border-[#00e5ff] shadow-[0_0_10px_rgba(0,229,255,0.4)] ring-1 ring-[#00e5ff]'
                       : 'bg-slate-800/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800'
                   }`}
-                  title={`${op.cnName} (${op.name}) - ${op.classType} / ${op.faction}`}
+                  title={`${op.cnName} (${op.name}) - ${op.rarity}★ ${op.classType} / ${op.faction}`}
                 >
+                  {/* Collab Tag only */}
+                  {op.faction === 'S.E.E.S.' && (
+                    <span className="absolute -top-1 -left-1 bg-sky-500 text-slate-950 text-[8px] font-black px-1 rounded shadow-sm z-10">
+                      P3R
+                    </span>
+                  )}
                   <div className="relative">
                     <img src={op.avatar} alt={op.cnName} className="w-9 h-9 rounded-full group-hover:scale-105 transition-transform" />
                     {selectedAssistant.id === op.id && (
@@ -210,11 +282,22 @@ export const MyProfileModal: React.FC<MyProfileModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className={`text-[10px] font-bold truncate max-w-full ${
-                    selectedAssistant.id === op.id ? 'text-[#00e5ff]' : 'text-slate-300'
-                  }`}>
-                    {op.cnName}
-                  </span>
+                  <div className="flex flex-col items-center w-full">
+                    <span className={`text-[10px] font-bold truncate max-w-full leading-tight ${
+                      selectedAssistant.id === op.id ? 'text-[#00e5ff]' : 'text-slate-300'
+                    }`}>
+                      {op.cnName}
+                    </span>
+                    <span className="text-[8px] text-slate-400 scale-90 -mt-0.5">
+                      {op.rarity}★ {op.classType === 'Guard' ? '近卫' :
+                                    op.classType === 'Caster' ? '术士' :
+                                    op.classType === 'Sniper' ? '狙击' :
+                                    op.classType === 'Specialist' ? '特种' :
+                                    op.classType === 'Defender' ? '重装' :
+                                    op.classType === 'Medic' ? '医疗' :
+                                    op.classType === 'Supporter' ? '辅助' : '先锋'}
+                    </span>
+                  </div>
                 </button>
               ))}
               {filteredOperators.length === 0 && (

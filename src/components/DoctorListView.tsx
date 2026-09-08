@@ -136,17 +136,41 @@ export const DoctorListView: React.FC<DoctorListViewProps> = ({
 
                   {/* Doctor & Assistant Info */}
                   <div className="flex items-start gap-3 mb-3">
-                    <div
-                      className="w-12 h-12 rounded-full border-2 p-0.5 overflow-hidden bg-[#0a0f16] flex-shrink-0 shadow-md group-hover:scale-105 transition-transform"
-                      style={{ borderColor: doc.assistant.color }}
-                    >
-                      <img src={doc.assistant.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    <div className="relative flex-shrink-0 group-hover:scale-105 transition-transform">
+                      <div
+                        className="w-12 h-12 rounded-full border-2 p-0.5 overflow-hidden bg-[#0a0f16] shadow-md"
+                        style={{ borderColor: doc.assistant.color }}
+                      >
+                        <img src={doc.assistant.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      </div>
+                      <span className={`absolute -bottom-1 -right-1 px-1 py-0.1 text-[8px] font-bold rounded shadow-sm ${
+                        doc.assistant.id === 'koromaru'
+                          ? 'bg-emerald-400 text-slate-950 font-black ring-1 ring-sky-400'
+                          : doc.assistant.faction === 'S.E.E.S.'
+                          ? 'bg-sky-500 text-slate-950 font-black'
+                          : doc.assistant.rarity === 6
+                          ? 'bg-amber-400 text-slate-950'
+                          : doc.assistant.rarity === 5
+                          ? 'bg-yellow-400 text-slate-950'
+                          : doc.assistant.rarity === 4
+                          ? 'bg-purple-400 text-slate-950'
+                          : 'bg-emerald-400 text-slate-950'
+                      }`}>
+                        {doc.assistant.id === 'koromaru' ? '1★ P3R' : doc.assistant.faction === 'S.E.E.S.' ? 'P3R' : `${doc.assistant.rarity}★`}
+                      </span>
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-bold text-white truncate group-hover:text-[#00e5ff] transition-colors">
-                        {doc.name}
-                      </h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h3 className="text-sm font-bold text-white truncate group-hover:text-[#00e5ff] transition-colors">
+                          {doc.name}
+                        </h3>
+                        {doc.assistant.faction === 'S.E.E.S.' && (
+                          <span className="text-[9px] px-1 py-0.2 bg-blue-600/30 text-sky-300 border border-sky-400 rounded font-bold">
+                            P3R
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[11px] text-slate-400 truncate flex items-center gap-1">
                         <span>助理:</span>
                         <b className="text-slate-200">{doc.assistant.cnName}</b>

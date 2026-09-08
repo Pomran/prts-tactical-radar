@@ -126,14 +126,26 @@ export const DoctorDetailModal: React.FC<DoctorDetailModalProps> = ({
               >
                 <img src={doctor.assistant.avatar} alt="Avatar" className="w-full h-full object-cover" />
               </div>
-              <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 bg-[#00e5ff] text-slate-950 text-[9px] font-bold rounded">
-                6★
+              <span className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 text-[9px] font-bold rounded ${
+                doctor.assistant.id === 'koromaru'
+                  ? 'bg-emerald-400 text-slate-950 font-black ring-1 ring-sky-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+                  : doctor.assistant.faction === 'S.E.E.S.'
+                  ? 'bg-sky-500 text-slate-950 font-black'
+                  : doctor.assistant.rarity === 6
+                  ? 'bg-amber-400 text-slate-950'
+                  : doctor.assistant.rarity === 5
+                  ? 'bg-yellow-400 text-slate-950'
+                  : doctor.assistant.rarity === 4
+                  ? 'bg-purple-400 text-slate-950'
+                  : 'bg-emerald-400 text-slate-950 font-black'
+              }`}>
+                {doctor.assistant.id === 'koromaru' ? '1★ P3R' : doctor.assistant.faction === 'S.E.E.S.' ? 'P3R' : `${doctor.assistant.rarity}★`}
               </span>
             </div>
 
             {/* Basic Info */}
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h3 className="text-base font-bold text-white tracking-wide">{doctor.name}</h3>
                 <span className="text-[10px] px-1.5 py-0.5 bg-[#00e5ff]/20 text-[#00e5ff] border border-[#00e5ff]/40 rounded">
                   Lv.{doctor.level}
@@ -141,6 +153,11 @@ export const DoctorDetailModal: React.FC<DoctorDetailModalProps> = ({
                 <span className="text-[10px] px-1.5 py-0.5 bg-[#ffde00]/20 text-[#ffde00] border border-[#ffde00]/40 rounded">
                   {doctor.server}
                 </span>
+                {doctor.assistant.faction === 'S.E.E.S.' && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-blue-600/30 text-sky-300 border border-sky-400 rounded font-bold">
+                    🔥 P3R · S.E.E.S.
+                  </span>
+                )}
               </div>
 
               <div className="text-xs text-slate-400 mb-2 flex items-center gap-2">
