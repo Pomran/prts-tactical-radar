@@ -82,7 +82,7 @@ export const FriendLinksModal: React.FC<FriendLinksModalProps> = ({ isOpen, onCl
   return (
     <div 
       id="friend-links-modal-overlay"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[500] flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-fade-in"
       onClick={onClose}
     >
       <div 
